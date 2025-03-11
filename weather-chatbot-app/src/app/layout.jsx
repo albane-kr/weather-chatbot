@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ConfigProvider, Button, Drawer } from 'antd';
+import { ConfigProvider, Button, Drawer, Card, Carousel } from 'antd';
 import 'antd/dist/reset.css';
 import { ThemeProvider, useTheme } from './themeContext';
 import { MenuOutlined, SunOutlined, MoonOutlined, SendOutlined } from '@ant-design/icons';
@@ -10,7 +10,7 @@ import { Helmet, HelmetProvider } from 'react-helmet-async';
 import TextArea from 'antd/es/input/TextArea';
 
 const Layout = ({ children }) => {
-  const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor } = useTheme();
+  const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor } = useTheme();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const maxLength = 100;
@@ -59,43 +59,92 @@ const Layout = ({ children }) => {
                 {isNightMode ? <SunOutlined /> : <MoonOutlined />} Day/Night Mode
               </Button>
             </Drawer>
-            <div style={{ flex: 1 }}>
-              {children}
-            </div>
-            <div style={{
-              position: 'fixed',
-              bottom: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '100%',
-              maxWidth: '600px',
-              backgroundColor: backgroundColor,
-              padding: '10px',
-              boxSizing: 'border-box',
-              display: 'flex',
-              alignItems: 'center',
-              borderRadius: '10px',
-              marginBottom: '15px',
-            }}>
-              <TextArea
-                placeholder="Chat with rAIny..."
-                autosize={{ minRows: 1, maxRows: 3 }}
-                value={inputValue}
-                onChange={handleInputChange}
-                count={{ show: true, max: maxLength }}
+            <div>
+              <Card
+                id='weather'
                 style={{
-                  flex: 1,
-                  backgroundColor: backgroundColor,
-                  color: isNightMode ? '#FFFFFF' : '#000000',
-                  border: 'border-box',
-                  borderStyle: 'solid',
-                  borderColor: '#FFFFFF',
-                  resize: 'block',
-                }}
-              />
-              <Button type="primary" onClick={handleSend} style={{ marginLeft: '10px', backgroundColor: sendButtonBackgroundColor }}>
-                <SendOutlined style={{ color: '#ffff' }} />
-              </Button>
+                  position: 'absolute',
+                  borderRadius: 0,
+                  backgroundColor: 'grey',
+                  paddingTop: '10px',
+                  paddingLeft: '10px',
+                  paddingRight: '10px',
+                  paddingBottom: '10px',
+                  marginBottom: '5px',
+                  height: '91.5%',
+                  width: '100%',
+                  alignItems: 'center'
+                }}>
+                <div>{children}</div>
+                <div>
+                  <Card
+                    id='textOutputArea'
+                    style={{
+                      display: 'flex',
+                      position: 'fixed',
+                      bottom: 0,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '100%',
+                      maxWidth: '97%',
+                      marginRight: '15px',
+                      marginBottom: '90px',
+                      backgroundColor: outputBackgroundColor,
+                      opacity: '0.6',
+                      borderRadius: '10px',
+                      border: 'dashed',
+                      borderColor: '#000000',
+                      borderWidth: '2px',
+                      boxSizing: 'border-box',
+                      color: isNightMode ? '#FFFFFF' : '#000000'
+                    }}
+                  >
+                    <p>Hi! I'm rAIny, your friendly weather chatbot. </p>
+                  </Card>
+                <div
+                  id='inputArea'
+                  style={{
+                    position: 'fixed',
+                    bottom: 0,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '100%',
+                    maxWidth: '97%',
+                    backgroundColor: backgroundColor,
+                    padding: '5px',
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    alignItems: 'center',
+                    borderRadius: '10px',
+                    marginBottom: '15px',
+                    marginTop: '5px',
+                    borderStyle: 'solid',
+                    borderColor: '#FFFFFF',
+                  }}
+                >
+                  <TextArea
+                    id='textInputArea'
+                    placeholder="Chat with rAIny..."
+                    autosize={{ minRows: 1, maxRows: 3 }}
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    count={{ show: true, max: maxLength }}
+                    style={{
+                      flex: 1,
+                      backgroundColor: backgroundColor,
+                      color: isNightMode ? '#FFFFFF' : '#000000',
+                      border: 'border-box',
+                      borderStyle: 'solid',
+                      borderColor: '#FFFFFF',
+                      resize: 'block',
+                    }}
+                  />
+                  <Button id='sendButton' type='primary' onClick={handleSend} style={{ marginLeft: '10px', backgroundColor: sendButtonBackgroundColor }}>
+                    <SendOutlined style={{ color: '#ffff' }} />
+                  </Button>
+                </div>
+                </div>
+              </Card>
             </div>
           </ConfigProvider>
         </body>
