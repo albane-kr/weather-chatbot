@@ -17,8 +17,10 @@ export const ThemeProvider = ({ children }) => {
 
   const outputBackgroundColor = isNightMode ? '#505964' : '#BEDBFE';
 
+  const sendButtonBackgroundColor = isNightMode ? '#4C1C1C' : '#B95656';
+
   return (
-    <ThemeContext.Provider value={{ isNightMode, toggleDayNightMode, backgroundColor, titleColor, outputBackgroundColor }}>
+    <ThemeContext.Provider value={{ isNightMode, toggleDayNightMode, backgroundColor, titleColor, outputBackgroundColor, sendButtonBackgroundColor }}>
       {children}
     </ThemeContext.Provider>
   );
