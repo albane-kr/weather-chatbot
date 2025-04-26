@@ -1,0 +1,16 @@
+text, weather_type_label, weather_type_intensity
+Il y a un peu de soleil, 2, 1
+Quel beau soleil, 2, 2
+Le soleil brille de mille feux, 2, 3
+Il y a une brise légère, 3, 1
+Il y a un peu de vent, 3, 2
+Il y a des rafales, 3, 3
+Il y a un vent à décorner les boeufs, 3, 3
+Il neige légèrement, 4, 1
+Il neige, 4, 2
+Il neige à gros flocons, 4, 3
+Il bruine, 1, 1
+Il drache, 1, 3
+Il pleut, 1, 2
+Il pleut des cordes, 1, 3
+Il pleut comme vache qui pisse, 1, 3
