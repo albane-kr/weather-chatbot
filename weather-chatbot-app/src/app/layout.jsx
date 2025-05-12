@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ConfigProvider, Button, Drawer, Card, Carousel } from 'antd';
+import { ConfigProvider, Button, Drawer, Card, Switch, Radio } from 'antd';
 import 'antd/dist/reset.css';
 import { ThemeProvider, useTheme } from './themeContext';
 import { MenuOutlined, SunOutlined, MoonOutlined, SendOutlined } from '@ant-design/icons';
@@ -10,10 +10,11 @@ import { Helmet, HelmetProvider } from 'react-helmet-async';
 import TextArea from 'antd/es/input/TextArea';
 
 const Layout = ({ children }) => {
-  const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor } = useTheme();
+  const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor, toggleFrenchGermanMode, isGermanMode } = useTheme();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const maxLength = 100;
+  const languageMode = isGermanMode ? 'German' : 'French';
 
   const showDrawer = () => {
     setDrawerVisible(true);
@@ -54,10 +55,12 @@ const Layout = ({ children }) => {
               onClose={closeDrawer}
               open={drawerVisible}
               style={{ backgroundColor }}
+              direction="vertical"
             >
               <Button onClick={toggleDayNightMode} style={{ backgroundColor, color: 'darkblue', borderColor: 'darkblue', marginBottom: '10px' }}>
-                {isNightMode ? <SunOutlined /> : <MoonOutlined />} Day/Night Mode
+                {isNightMode ? <SunOutlined /> : <MoonOutlined />} Mode
               </Button>
+              <Radio.Group block options={[{label: 'DE', value: languageMode}, {label: 'FR', value: !languageMode}]} optionType="button" buttonStyle="solid" style={{ backgroundColor, color: 'darkblue', borderColor: 'darkblue', marginBottom: '10px' }}/>
             </Drawer>
             <div>
               <Card
