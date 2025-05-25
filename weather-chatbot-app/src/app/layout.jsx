@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ConfigProvider, Button, Drawer, Card, Switch, Radio } from 'antd';
+import { ConfigProvider, Button, Drawer, Card, Radio } from 'antd';
 import 'antd/dist/reset.css';
 import { ThemeProvider, useTheme } from './themeContext';
 import { MenuOutlined, SunOutlined, MoonOutlined, SendOutlined } from '@ant-design/icons';
@@ -10,11 +10,13 @@ import { Helmet, HelmetProvider } from 'react-helmet-async';
 import TextArea from 'antd/es/input/TextArea';
 
 const Layout = ({ children }) => {
-  const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor, toggleFrenchGermanMode, isGermanMode } = useTheme();
+  const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor} = useTheme();
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [isGermanMode, setIsGermanMode] = useState(true);
   const [inputValue, setInputValue] = useState('');
   const maxLength = 100;
   const languageMode = isGermanMode ? 'German' : 'French';
+  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot!");
 
   const showDrawer = () => {
     setDrawerVisible(true);
@@ -30,10 +32,35 @@ const Layout = ({ children }) => {
     }
   };
 
-  const handleSend = (e) => {
-    console.log('Sending:', inputValue);
-    setInputValue('');
-  }
+  const handleSend = async () => {
+    console.log('Current languageMode:', languageMode);
+    try {
+      const response = await fetch('http://127.0.0.1:5000/generate-response', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: inputValue,
+          language: languageMode,
+          weather_type: 'rainy',
+          weather_type_intensity: 'high',
+          temperature: '20',
+          geolocation: 'Berlin',
+          expression: 'il pleut comme vache qui pisse',
+          emotion: 'sad',
+        }),
+      });
+
+      const data = await response.json();
+      const generatedText = data.response;
+
+      setInputValue('');
+      setOutput(generatedText);
+    } catch (error) {
+      console.error('Error generating response:', error);
+    }
+  };
 
   return (
     <HelmetProvider>
@@ -60,7 +87,15 @@ const Layout = ({ children }) => {
               <Button onClick={toggleDayNightMode} style={{ backgroundColor, color: 'darkblue', borderColor: 'darkblue', marginBottom: '10px' }}>
                 {isNightMode ? <SunOutlined /> : <MoonOutlined />} Mode
               </Button>
-              <Radio.Group block options={[{label: 'DE', value: languageMode}, {label: 'FR', value: !languageMode}]} optionType="button" buttonStyle="solid" style={{ backgroundColor, color: 'darkblue', borderColor: 'darkblue', marginBottom: '10px' }}/>
+              <Radio.Group
+                value={isGermanMode}
+                onChange={e => setIsGermanMode(e.target.value === true || e.target.value === "true")}
+                options={[{label: 'DE', value: true}, {label: 'FR', value: false}]}
+                block
+                optionType="button"
+                buttonStyle="solid"
+                style={{ backgroundColor, color: 'darkblue', borderColor: 'darkblue', marginBottom: '10px' }}
+              />
             </Drawer>
             <div>
               <Card
@@ -102,7 +137,7 @@ const Layout = ({ children }) => {
                       color: isNightMode ? '#FFFFFF' : '#000000'
                     }}
                   >
-                    <p>Hi! I'm rAIny, your friendly weather chatbot. </p>
+                    <p>{output}</p>
                   </Card>
                 <div
                   id='inputArea'

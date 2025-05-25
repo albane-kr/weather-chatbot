@@ -1,12 +1,15 @@
-from google import genai
-from dotenv import load_dotenv
 import os
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from dotenv import load_dotenv
+from huggingface_hub import login
 
 load_dotenv()
+login(token=os.environ.get("HUGGINGFACE_API_KEY"))
+model_name = "google/gemma-3-1b-it"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
 
-# INSERT YOUR API KEY BELOW
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-model = "gemini-2.0-flash"
+
 def generate_response(prompt: str, language: str, weather_type: str, weather_type_intensity: str, temperature: str, geolocation: str, expression: str, emotion: str) -> str:
     """
     @param prompt: str -> This parameter is the textual user input
@@ -24,8 +27,14 @@ def generate_response(prompt: str, language: str, weather_type: str, weather_typ
     Description: This function takes the user input, adds some part between the | and then returns the textual response. 
     The length of this is limited to 10-30 words, to not significantly impact performance by too long responses.
     """
-    response = client.models.generate_content(model=model, contents = prompt + f" | request: keep the answer between 10 and 30 words and answer in {language}! | Take into account that the answer should include the weather type {weather_type}, weather intensity {weather_type_intensity}, temperature {temperature}, geolocation {geolocation}, and this expression: {expression}, and with this emotion: {emotion}. Do not fetch the real weather, assume the prediction in this prompt is correct")
+    full_prompt = (
+        prompt + f"| request: keep the answer between 10 and 50 words and answer in {language}! Take into account that the answer should include the weather type {weather_type}, weather intensity {weather_type_intensity}, temperature {temperature}, geolocation {geolocation}, this expression: {expression}, and with this emotion: {emotion}. Do not fetch the real weather, assume the prediction in this prompt is correct."
+    )
+    inputs = tokenizer(full_prompt, return_tensors="pt")
+    outputs = model.generate(**inputs, max_new_tokens=60)
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    response = response[len(full_prompt):].strip()
     print(response)
-    return response.text
+    return response
 
-generate_response("Hello, what is the weather like today in Kerry?", "French", "rainy", "high", "20 degrees", "Berlin", "il pleut comme vache qui pisse", "sad")
+#generate_response("Hello, what is the weather like today in Berlin?", "French", "rainy", "high", "20", "Berlin", "il pleut comme vache qui pisse", "sad")

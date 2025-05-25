@@ -6,7 +6,6 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [isNightMode, setIsNightMode] = useState(false);
-  const [isGermanMode, setIsGermanMode] = useState(false);
 
   const toggleDayNightMode = () => {
     setIsNightMode(!isNightMode);
@@ -20,12 +19,8 @@ export const ThemeProvider = ({ children }) => {
 
   const sendButtonBackgroundColor = isNightMode ? '#4C1C1C' : '#B95656';
 
-  const toggleFrenchGermanMode = () => {
-    setIsGermanMode(!isGermanMode);
-  }
-
   return (
-    <ThemeContext.Provider value={{ isNightMode, toggleDayNightMode, backgroundColor, titleColor, outputBackgroundColor, sendButtonBackgroundColor, toggleFrenchGermanMode, isGermanMode }}>
+    <ThemeContext.Provider value={{ isNightMode, toggleDayNightMode, backgroundColor, titleColor, outputBackgroundColor, sendButtonBackgroundColor }}>
       {children}
     </ThemeContext.Provider>
   );
