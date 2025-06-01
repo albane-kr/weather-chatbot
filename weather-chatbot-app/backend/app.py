@@ -8,8 +8,21 @@ app = Flask(__name__)
 CORS(app)
 
 def get_weather_id(weather_type, weather_type_intensity):
-    #TODO
-    pass
+    """
+    Returns the id from weather_labels.csv matching the given weather_type and weather_type_intensity.
+    """
+    try:
+        with open("llm/weather_labels.csv", encoding="utf-8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if (
+                    row["weather_type"].strip().lower() == weather_type.strip().lower() and
+                    row["weather_type_intensity"].strip().lower() == weather_type_intensity.strip().lower()
+                ):
+                    return row["id"]
+    except Exception as e:
+        print(f"Error reading weather_labels.csv: {e}")
+    return None
 
 def get_weather_expression(language, weather_id):
     """
