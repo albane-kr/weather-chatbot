@@ -1,20 +1,20 @@
-text, weather_type_label, weather_type_intensity
-Es tröpfelt, 1, 1
-Es pisst, 1, 2
-Es regnet Bindfäden, 1, 3
-Es schüttet wie aus Kübeln, 1, 3
-Es regnet in Strömen, 1, 3
-Es ist leicht bedeckt, 2, 1
-Die Sonne lacht, 2, 2
-Es ist Bombenwetter, 2, 3
-Da braut sich was zusammen, 3, 3
-Es ist graues Suppenwetter, 3, 2
-Es ist windig, 3, 1
-Es ist zugig, 3, 2
-Es zieht, 3, 1
-Der Wind bläst ganz ordentlich, 3, 3
-Es stürmt, 3, 3
-Es schneit, 4, 2
-Es flockt, 4, 1
-Es grieselt, 4, 1
-Es schneit wie verrückt, 4, 3
+weather_id,expression
+1,Es tröpfelt
+2,Es pisst
+3,Es regnet Bindfäden
+3,Es schüttet wie aus Kübeln
+3,Es regnet in Strömen
+4,Es ist leicht bedeckt
+5,Die Sonne lacht
+6,Es ist Bombenwetter
+9,Da braut sich was zusammen
+8,Es ist graues Suppenwetter
+7,Es ist windig
+8,Es ist zugig
+7,Es zieht
+9,Der Wind bläst ganz ordentlich
+9,Es stürmt
+11,Es schneit
+10,Es flockt
+10,Es grieselt
+12,Es schneit wie verrückt
