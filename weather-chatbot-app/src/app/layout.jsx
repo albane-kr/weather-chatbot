@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { ConfigProvider, Button, Drawer, Card, Switch, Radio } from 'antd';
+import { ConfigProvider, Button, Drawer, Card, Radio, Select } from 'antd';
 import 'antd/dist/reset.css';
 import { ThemeProvider, useTheme } from './themeContext';
 import { MenuOutlined, SunOutlined, MoonOutlined, SendOutlined } from '@ant-design/icons';
 import Title from 'antd/es/typography/Title';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import TextArea from 'antd/es/input/TextArea';
+import { Country, City } from 'country-state-city';
 
 const Layout = ({ children }) => {
   const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor, toggleFrenchGermanMode, isGermanMode } = useTheme();
@@ -15,6 +16,23 @@ const Layout = ({ children }) => {
   const [inputValue, setInputValue] = useState('');
   const maxLength = 100;
   const languageMode = isGermanMode ? 'German' : 'French';
+  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot!");
+  const [selectedCountry, setSelectedCountry] = useState('LU');
+  const [selectedCity, setSelectedCity] = useState('Luxembourg');
+
+  const countries = Country.getAllCountries()
+    .map(country => ({ label: country.name, value: country.isoCode }));
+  
+  const cityList = City.getCitiesOfCountry(selectedCountry)
+    .map(city => ({ label: city.name, value: city.name }));
+  
+  const handleCountryChange = (value) => {
+    setSelectedCountry(value);
+  };
+
+  const handleCityChange = (value) => {
+    setSelectedCity(value);
+  };
 
   const showDrawer = () => {
     setDrawerVisible(true);
@@ -30,10 +48,31 @@ const Layout = ({ children }) => {
     }
   };
 
-  const handleSend = (e) => {
-    console.log('Sending:', inputValue);
-    setInputValue('');
-  }
+  const handleSend = async () => {
+    console.log('Current languageMode:', languageMode);
+    try {
+      const response = await fetch('http://127.0.0.1:5000/generate-response', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: inputValue,
+          language: languageMode,
+          geolocation: selectedCity,
+          emotion: 'sad',
+        }),
+      });
+
+      const data = await response.json();
+      const generatedText = data.response;
+
+      setInputValue('');
+      setOutput(generatedText);
+    } catch (error) {
+      console.error('Error generating response:', error);
+    }
+  };
 
   return (
     <HelmetProvider>
@@ -60,7 +99,31 @@ const Layout = ({ children }) => {
               <Button onClick={toggleDayNightMode} style={{ backgroundColor, color: 'darkblue', borderColor: 'darkblue', marginBottom: '10px' }}>
                 {isNightMode ? <SunOutlined /> : <MoonOutlined />} Mode
               </Button>
-              <Radio.Group block options={[{label: 'DE', value: languageMode}, {label: 'FR', value: !languageMode}]} optionType="button" buttonStyle="solid" style={{ backgroundColor, color: 'darkblue', borderColor: 'darkblue', marginBottom: '10px' }}/>
+              <Radio.Group
+                value={isGermanMode}
+                onChange={e => setIsGermanMode(e.target.value === true || e.target.value === "true")}
+                options={[{label: 'DE', value: true}, {label: 'FR', value: false}]}
+                block
+                optionType="button"
+                buttonStyle="solid"
+                style={{ backgroundColor, color: 'darkblue', borderColor: 'darkblue', marginBottom: '10px' }}
+              />
+              <Select
+                value={selectedCountry}
+                onChange={handleCountryChange}
+                options={countries}
+                style={{ width: '100%', marginBottom: '10px', backgroundColor, color: 'darkblue', borderColor: 'darkblue' }}
+                placeholder="Select a country"
+              />
+              <Select
+                value={selectedCity}
+                onChange={handleCityChange}
+                options={cityList}
+                showSearch
+                filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                style={{ width: '100%', backgroundColor, color: 'darkblue', borderColor: 'darkblue' }}
+                placeholder="Select a city"
+              />
             </Drawer>
             <div>
               <Card
@@ -127,7 +190,7 @@ const Layout = ({ children }) => {
                 >
                   <TextArea
                     id='textInputArea'
-                    placeholder="Chat with rAIny..."
+                    placeholder="Ask rAIny about the weather..."
                     autosize={{ minRows: 1, maxRows: 3 }}
                     value={inputValue}
                     onChange={handleInputChange}
