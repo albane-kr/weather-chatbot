@@ -11,8 +11,9 @@ import TextArea from 'antd/es/input/TextArea';
 import { Country, City } from 'country-state-city';
 
 const Layout = ({ children }) => {
-  const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor, toggleFrenchGermanMode, isGermanMode } = useTheme();
+  const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor} = useTheme();
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [isGermanMode, setIsGermanMode] = useState(true);
   const [inputValue, setInputValue] = useState('');
   const maxLength = 100;
   const languageMode = isGermanMode ? 'German' : 'French';
@@ -165,7 +166,7 @@ const Layout = ({ children }) => {
                       color: isNightMode ? '#FFFFFF' : '#000000'
                     }}
                   >
-                    <p>Hi! I'm rAIny, your friendly weather chatbot. </p>
+                    <p>{output}</p>
                   </Card>
                 <div
                   id='inputArea'

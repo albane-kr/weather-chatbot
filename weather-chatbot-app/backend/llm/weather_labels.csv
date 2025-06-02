@@ -1,0 +1,13 @@
+id,weather_type_id,weather_type,weather_type_intensity_id,weather_type_intensity
+1,1,rain,1,low
+2,1,rain,2,medium
+3,1,rain,3,high
+4,2,sun,1,low
+5,2,sun,2,medium
+6,2,sun,3,high
+7,3,cloud,1,low
+8,3,cloud,2,medium
+9,3,cloud,3,high
+10,4,snow,1,low
+11,4,snow,2,medium
+12,4,snow,3,high
