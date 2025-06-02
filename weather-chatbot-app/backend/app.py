@@ -3,9 +3,13 @@ from flask_cors import CORS
 from llm.LLMAccess import generate_response
 import csv
 import random
+from llm.load_text_model import predict_emotion
+import torch
 
 app = Flask(__name__)
 CORS(app)
+
+device = "cuda:0" if torch.cuda.is_available() else "cpu" 
 
 def get_temperature():
     """
@@ -76,7 +80,7 @@ def generate_response_api():
     geolocation = data.get('geolocation')
     weather_id = get_weather_id_from_coco()
     expression = get_weather_expression(language, weather_id)
-    emotion = data.get('emotion')
+    emotion = predict_emotion(prompt, device)
 
     # Call the generate_response function
     response = generate_response(prompt, language, temperature, geolocation, expression, emotion)

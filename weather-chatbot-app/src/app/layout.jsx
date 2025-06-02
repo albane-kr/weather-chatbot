@@ -60,8 +60,7 @@ const Layout = ({ children }) => {
         body: JSON.stringify({
           prompt: inputValue,
           language: languageMode,
-          geolocation: selectedCity,
-          emotion: 'sad',
+          geolocation: selectedCity
         }),
       });
 
