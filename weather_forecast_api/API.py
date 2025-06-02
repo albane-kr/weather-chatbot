@@ -225,9 +225,8 @@ class WeatherPredictionLSTM(Resource):
         # Assign column names to the predictions DataFrame
         output_csv_path = 'lstm_predictions.csv'
         predictions_df = pd.DataFrame(predictions_np)
-        predictions_df.columns = ["time", "temp", "dwpt", "rhum", "prcp", "snow", "wdir", "wspd", "wpgt", "pres", "tsun", "coco", "lon", "lat"]
 
-        predictions_df.to_csv(output_csv_path, index=False)
+        predictions_df.columns = ["time", "temp", "dwpt", "rhum", "prcp", "snow", "wdir", "wspd", "wpgt", "pres", "tsun", "coco", "lon", "lat"]
 
         # Generate and save separate graphs for each feature
         graph_folder = 'lstm_prediction_graphs'
@@ -235,23 +234,25 @@ class WeatherPredictionLSTM(Resource):
         num_columns = predictions_df.shape[1]
         station_csv_path = os.path.join(output_folder, f"{station_id}_hourly.csv")
         # Take the last 72 features from the dataframe (blue), then append the prediction (orange)
-        for i, column in enumerate(predictions_df.columns):
-            plt.figure(figsize=(10, 6))
-            # Plot last 72 actual values in blue
-            df = pd.read_csv(station_csv_path)
-            if column not in df.columns:
-                continue 
-            last_72_actual = df[column].values[-72:]
-            plt.plot(range(72), last_72_actual, color='blue', label='Actual (last 72)')
-            # Plot predictions in orange, starting after the last actual value
-            plt.plot(range(72), predictions_df[column], color='orange', label='Prediction')
-            plt.title(f'LSTM Weather Predictions - {column}')
-            plt.xlabel('Time Step')
-            plt.ylabel(column)
-            plt.legend()
-            plt.tight_layout()
-            plt.savefig(os.path.join(graph_folder, f'lstm_predictions_{column}.png'))
-            plt.close()
+        # for i, column in enumerate(predictions_df.columns):
+        #     plt.figure(figsize=(10, 6))
+        #     # Plot last 72 actual values in blue
+        #     df = pd.read_csv(station_csv_path)
+        #     if column not in df.columns:
+        #         continue 
+        #     last_72_actual = df[column].values[-72:]
+        #     plt.plot(range(72), last_72_actual, color='blue', label='Actual (last 72)')
+        #     # Plot predictions in orange, starting after the last actual value
+        #     plt.plot(range(72), predictions_df[column], color='orange', label='Prediction')
+        #     plt.title(f'LSTM Weather Predictions - {column}')
+        #     plt.xlabel('Time Step')
+        #     plt.ylabel(column)
+        #     plt.legend()
+        #     plt.tight_layout()
+        #     plt.savefig(os.path.join(graph_folder, f'lstm_predictions_{column}.png'))
+        #     plt.close()
+        predictions_df.drop(columns=["time", "dwpt", "rhum", "snow", "wdir", "wspd", "wpgt", "pres", "prcp", "tsun", "lon", "lat"], inplace=True)  # Drop unnecessary columns
+        predictions_df.to_csv(output_csv_path, index=False)
 
         return send_file(output_csv_path, as_attachment=True)
 
