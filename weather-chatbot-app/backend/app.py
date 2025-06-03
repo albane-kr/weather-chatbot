@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 import requests
 from flask_cors import CORS
 from llm.LLMAccess import generate_response
@@ -8,8 +8,11 @@ from llm.load_text_model import predict_emotion
 import torch
 import os
 from datetime import datetime
+import uuid
+from aiohttp import web
 
 app = Flask(__name__)
+app.secret_key = '06032025'
 CORS(app)
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu" 
@@ -26,8 +29,13 @@ def get_temperature(csv_path):
                 reader,
                 key=lambda row: abs(datetime.fromisoformat(row["time"]) - now)
             )
-            print(closest_row["time"])
-            return int(round(closest_row["temp"]))
+            temp_str = closest_row["temp"]
+            try:
+                temp = float(temp_str)
+                return int(round(temp))
+            except Exception as e:
+                print(f"Invalid temperature value: {temp_str} ({e})")
+                return None
     except Exception as e:
         print(f"Error reading {csv_path}: {e}")
     return None
@@ -86,19 +94,20 @@ def get_weather_expression(language, weather_id):
         print(f"Error reading {filename}: {e}")
         return ""
 
-def get_weather_forecast(city_name, forecast_hours=72):
+def get_weather_forecast(city_name, forecast_hours=72, session_id=None):
     """
     Calls the external weather API and returns the response JSON.
     """
     url = "http://127.0.0.1:5001/weather/predict_lstm"
     payload = {
         "city_name": city_name,
-        "forecast_hours": forecast_hours
+        "forecast_hours": forecast_hours,
+        "session_id": session_id
     }
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
-        csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../weather_forecast_api/lstm_predictions.csv"))
+        csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f"../../weather_forecast_api/lstm_predictions_{session_id}.csv"))
         return csv_path
     except Exception as e:
         print(f"Error calling weather API: {e}")
@@ -106,26 +115,39 @@ def get_weather_forecast(city_name, forecast_hours=72):
 
 @app.route('/generate-response', methods=['POST'])
 def generate_response_api():
+    session_id = session.get('session_id')
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        session['session_id'] = session_id
+        print(f"Generated new session ID: {session['session_id']}")
+    else:
+        print(f"Using existing session ID: {session_id}")
+
     data = request.json
     prompt = data.get('prompt')
     language = data.get('language')
     geolocation = data.get('geolocation')
     print(f"Received prompt: {prompt}, language: {language}, geolocation: {geolocation}")
-    weather_data = get_weather_forecast(geolocation)
+
+    weather_data = get_weather_forecast(geolocation, session_id=session_id)
     if not weather_data:
         return jsonify({'error': 'Failed to retrieve weather data'}), 500
+    
     temperature = get_temperature(weather_data)
     print(f"Temperature: {temperature}")
     if temperature is None:
         return jsonify({'error': 'Failed to retrieve temperature data'}), 500
+    
     weather_id = get_weather_id_from_coco(weather_data)
     print(f"Weather ID: {weather_id}")
     if weather_id is None:
         return jsonify({'error': 'Failed to retrieve weather ID'}), 500
+    
     expression = get_weather_expression(language, weather_id)
     print(f"Weather Expression: {expression}")
     if not expression:
         return jsonify({'error': 'Failed to retrieve weather expression'}), 500
+    
     emotion = predict_emotion(prompt, device)
     print(f"Detected Emotion: {emotion}")
     if not emotion:
@@ -133,7 +155,7 @@ def generate_response_api():
 
     # Call the generate_response function
     response = generate_response(prompt, language, temperature, geolocation, expression, emotion)
-    return jsonify({'response': response})
+    return jsonify({'response': response, 'session_id': session_id})
 
 if __name__ == '__main__':
     app.run(debug=True)

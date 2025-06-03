@@ -45,6 +45,10 @@ city_model = weather_ns.model(
             description='Number of hours to forecast weather conditions.',
             default=72,
         ),
+        'session_id': fields.String(
+            required=True,
+            description='Session id of the user.',
+        )
     }
 )
 
@@ -156,6 +160,7 @@ class WeatherPredictionLSTM(Resource):
         data = request.json
         city_name = data.get('city_name')
         forecast_hours = data.get('forecast_hours', 72)
+        session_id = data.get('session_id', 'default')
 
         city_coordinates = get_city_coordinates(city_name)
         if not city_coordinates:
@@ -223,7 +228,7 @@ class WeatherPredictionLSTM(Resource):
                 scaler = dataset.scalers[i]
                 predictions_np[:, i] = scaler.inverse_transform(predictions_np[:, i].reshape(-1, 1)).flatten()
         # Assign column names to the predictions DataFrame
-        output_csv_path = 'lstm_predictions.csv'
+        output_csv_path = f'lstm_predictions_{session_id}.csv'
         predictions_df = pd.DataFrame(predictions_np)
         predictions_df.columns = ["time", "temp", "dwpt", "rhum", "prcp", "snow", "wdir", "wspd", "wpgt", "pres", "tsun", "coco", "lon", "lat"]
         predictions_df["time"] = pd.date_range(start=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0), periods=len(predictions_df), freq='H')
