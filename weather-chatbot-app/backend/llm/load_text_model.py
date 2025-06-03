@@ -3,14 +3,14 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 from gensim.models import Word2Vec
 import torch
 import numpy as np
-from SimpleNN import SimpleNN
+from llm.SimpleNN import SimpleNN
 import torch.nn.functional as F
 working_directory = os.getcwd()
 torch.serialization.add_safe_globals({'SimpleNN': SimpleNN})
 
 
 # Load pretrained Word2Vec model for input transformation
-word2vec_model = Word2Vec.load(working_directory+'/word2vec.model')
+word2vec_model = Word2Vec.load(working_directory+'/llm/word2vec.model')
 
 
 def load_checkpoint(filepath):
@@ -26,7 +26,7 @@ def load_checkpoint(filepath):
     best_loss = checkpoint['best_loss']
     
     return model, optimizer, epoch, best_loss
-model, optimizer, start_epoch, best_loss = load_checkpoint(working_directory+'/best_model.pth.tar')
+model, optimizer, start_epoch, best_loss = load_checkpoint(working_directory+'/llm/best_model.pth.tar')
 
 def sentence_to_vector(sentence, model):
     """

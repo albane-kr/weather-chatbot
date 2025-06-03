@@ -23,10 +23,10 @@ def generate_response(prompt: str, language: str, temperature: str, geolocation:
     the user.
 
     Description: This function takes the user input, adds some part between the | and then returns the textual response. 
-    The length of this is limited to 10-30 words, to not significantly impact performance by too long responses.
+    The length of this is limited to 10-50 words, to not significantly impact performance by too long responses.
     """
     full_prompt = (
-        prompt + f"| request: keep the answer between 10 and 50 words and answer in {language}! Take into account that the answer should include the temperature {temperature}, geolocation {geolocation}, this expression: {expression}, and with this emotion: {emotion}. Do not fetch the real weather, assume the prediction in this prompt is correct."
+        prompt + f"| request: keep the answer between 10 and 50 words and answer in {language}! Take into account that the answer should include the temperature {temperature}, geolocation {geolocation}, this expression: {expression}, and with this emotion: {emotion}. Do not fetch the real weather, assume the prediction in this prompt is correct and do not mention the language you use. Do NOT use any other language than {language}, so no english word is accepted."
     )
     inputs = tokenizer(full_prompt, return_tensors="pt")
     outputs = model.generate(**inputs, max_new_tokens=60)

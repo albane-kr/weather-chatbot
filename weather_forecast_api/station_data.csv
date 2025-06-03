@@ -1,2 +1,2 @@
 name,country,region,wmo,icao,latitude,longitude,elevation,timezone,hourly_start,hourly_end,daily_start,daily_end,monthly_start,monthly_end,distance
-Luxembourg / Luxembourg,LU,LL,06590,ELLX,49.6167,6.2167,376.0,Europe/Luxembourg,1949-01-01,2025-05-26,1947-01-01,2025-05-26,1947-01-01,2022-01-01,6289.927179793422
+Luxembourg / Luxembourg,LU,LL,06590,ELLX,49.6167,6.2167,376.0,Europe/Luxembourg,1949-01-01,2025-05-26,1947-01-01,2025-05-26,1947-01-01,2022-01-01,23013.341367650944

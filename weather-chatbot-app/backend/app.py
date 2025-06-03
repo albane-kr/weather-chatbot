@@ -1,48 +1,63 @@
 from flask import Flask, request, jsonify
+import requests
 from flask_cors import CORS
 from llm.LLMAccess import generate_response
 import csv
 import random
 from llm.load_text_model import predict_emotion
 import torch
+import os
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu" 
 
-def get_temperature():
+def get_temperature(csv_path):
     """
     Retrieves the 12th value of temp from lstm_predictions.csv. Corresponds to the temperature at 12:00 PM on the day of the query.
     """
     try:
-        with open("weather_forecast_api/lstm_predictions.csv", encoding="utf-8") as csvfile:
+        with open(csv_path, encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
-            temps = [float(row["temp"]) for row in reader]
-            if len(temps) >= 12:
-                return temps[12]  # 12th value (0-based index)
+            now = datetime.now()
+            closest_row = min(
+                reader,
+                key=lambda row: abs(datetime.fromisoformat(row["time"]) - now)
+            )
+            print(closest_row["time"])
+            return int(round(closest_row["temp"]))
     except Exception as e:
-        print(f"Error reading lstm_predictions.csv: {e}")
+        print(f"Error reading {csv_path}: {e}")
     return None
 
-def get_weather_id_from_coco():
+def get_weather_id_from_coco(csv_path):
     """
     Retrieves the 12th value of coco from lstm_predictions.csv,
     rounds it to the nearest integer, and maps it to a weather_id using coco_to_weather_id.csv file mapping.
     """
     try:
-        with open("weather_forecast_api/lstm_predictions.csv", encoding="utf-8") as csvfile:
+        with open(csv_path, encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
-            cocos = [float(row["coco"]) for row in reader]
-            if len(cocos) >= 12:
-                coco_value = cocos[12]  # 12th value (1-based index)
-                coco_rounded = int(round(coco_value))
-                # Now map to weather_id using coco_to_weather_id.csv
-                with open("weather_forecast_api/coco_to_weather_id.csv", encoding="utf-8") as mapfile:
-                    mapreader = csv.DictReader(mapfile)
-                    for row in mapreader:
-                        if int(row["coco_code"]) == coco_rounded:
-                            return row["weather_id"]
+            now = datetime.now()
+            closest_row = min(
+                reader,
+                key=lambda row: abs(datetime.fromisoformat(row["time"]) - now)
+            )
+            coco_value = float(closest_row["coco"])
+            print(f"Raw COCO value (closest time row): {coco_value}")
+            coco_rounded = int(round(coco_value))
+            print(f"Rounded COCO value: {coco_rounded}")
+            weather_ids = []
+            with open("llm/coco_to_weather_id.csv", encoding="utf-8") as mapfile:
+                mapreader = csv.DictReader(mapfile)
+                for row in mapreader:
+                    coco_code = row["coco_code"].strip().rstrip(',')
+                    if coco_code and int(coco_code) == coco_rounded:
+                        weather_ids.append(row["weather_id"].strip())
+            if weather_ids:
+                return random.choice(weather_ids)
     except Exception as e:
         print(f"Error processing coco to weather_id: {e}")
     return None
@@ -52,9 +67,9 @@ def get_weather_expression(language, weather_id):
     Selects a random expression from the correct CSV file based on language and weather_id.
     """
     if language.lower() == "french":
-        filename = "weather_expressions_FR.csv"
+        filename = "llm/weather_expressions_FR.csv"
     else:
-        filename = "weather_expressions_DE.csv"
+        filename = "llm/weather_expressions_DE.csv"
     expressions = []
     try:
         with open(filename, encoding="utf-8") as csvfile:
@@ -71,16 +86,50 @@ def get_weather_expression(language, weather_id):
         print(f"Error reading {filename}: {e}")
         return ""
 
+def get_weather_forecast(city_name, forecast_hours=72):
+    """
+    Calls the external weather API and returns the response JSON.
+    """
+    url = "http://127.0.0.1:5001/weather/predict_lstm"
+    payload = {
+        "city_name": city_name,
+        "forecast_hours": forecast_hours
+    }
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../weather_forecast_api/lstm_predictions.csv"))
+        return csv_path
+    except Exception as e:
+        print(f"Error calling weather API: {e}")
+        return None
+
 @app.route('/generate-response', methods=['POST'])
 def generate_response_api():
     data = request.json
     prompt = data.get('prompt')
     language = data.get('language')
-    temperature = get_temperature()
     geolocation = data.get('geolocation')
-    weather_id = get_weather_id_from_coco()
+    print(f"Received prompt: {prompt}, language: {language}, geolocation: {geolocation}")
+    weather_data = get_weather_forecast(geolocation)
+    if not weather_data:
+        return jsonify({'error': 'Failed to retrieve weather data'}), 500
+    temperature = get_temperature(weather_data)
+    print(f"Temperature: {temperature}")
+    if temperature is None:
+        return jsonify({'error': 'Failed to retrieve temperature data'}), 500
+    weather_id = get_weather_id_from_coco(weather_data)
+    print(f"Weather ID: {weather_id}")
+    if weather_id is None:
+        return jsonify({'error': 'Failed to retrieve weather ID'}), 500
     expression = get_weather_expression(language, weather_id)
+    print(f"Weather Expression: {expression}")
+    if not expression:
+        return jsonify({'error': 'Failed to retrieve weather expression'}), 500
     emotion = predict_emotion(prompt, device)
+    print(f"Detected Emotion: {emotion}")
+    if not emotion:
+        return jsonify({'error': 'Failed to detect emotion'}), 500
 
     # Call the generate_response function
     response = generate_response(prompt, language, temperature, geolocation, expression, emotion)

@@ -225,9 +225,8 @@ class WeatherPredictionLSTM(Resource):
         # Assign column names to the predictions DataFrame
         output_csv_path = 'lstm_predictions.csv'
         predictions_df = pd.DataFrame(predictions_np)
-
         predictions_df.columns = ["time", "temp", "dwpt", "rhum", "prcp", "snow", "wdir", "wspd", "wpgt", "pres", "tsun", "coco", "lon", "lat"]
-
+        predictions_df["time"] = pd.date_range(start=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0), periods=len(predictions_df), freq='H')
         # Generate and save separate graphs for each feature
         graph_folder = 'lstm_prediction_graphs'
         os.makedirs(graph_folder, exist_ok=True)
@@ -251,7 +250,7 @@ class WeatherPredictionLSTM(Resource):
         #     plt.tight_layout()
         #     plt.savefig(os.path.join(graph_folder, f'lstm_predictions_{column}.png'))
         #     plt.close()
-        predictions_df.drop(columns=["time", "dwpt", "rhum", "snow", "wdir", "wspd", "wpgt", "pres", "prcp", "tsun", "lon", "lat"], inplace=True)  # Drop unnecessary columns
+        predictions_df.drop(columns=["dwpt", "rhum", "snow", "wdir", "wspd", "wpgt", "pres", "prcp", "tsun", "lon", "lat"], inplace=True)  # Drop unnecessary columns
         predictions_df.to_csv(output_csv_path, index=False)
 
         return send_file(output_csv_path, as_attachment=True)
@@ -270,4 +269,4 @@ def predict_weather_lstm(model, data_loader, device):
     return predictions
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port=5001, debug=True)
