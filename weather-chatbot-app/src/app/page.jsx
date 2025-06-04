@@ -1,7 +1,7 @@
 'use client';
 
 export default function App() {
-  const appTitle = "Weather Chatbot";
+  const appTitle = '';
   return (
     appTitle
   );

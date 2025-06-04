@@ -17,7 +17,7 @@ const Layout = ({ children }) => {
   const [inputValue, setInputValue] = useState('');
   const maxLength = 100;
   const languageMode = isGermanMode ? 'German' : 'French';
-  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot!");
+  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! Before we start, please select your preferred language and location in the menu on the top right corner. You can also toggle between day and night mode for a better experience.");
   const [selectedCountry, setSelectedCountry] = useState('LU');
   const [selectedCity, setSelectedCity] = useState('Luxembourg');
 
@@ -82,11 +82,11 @@ const Layout = ({ children }) => {
         </Helmet>
         <body style={{ backgroundColor, fontFamily: 'Cherry Bomb, sans-serif' }}>
           <ConfigProvider>
-            <Title style={{ color: titleColor, fontFamily: 'Cherry Bomb, sans-serif', left: 1, marginLeft: '10px' }}>rAIny</Title>
+            <Title style={{ color: titleColor, fontFamily: 'Cherry Bomb, sans-serif', left: 1, marginLeft: '10px', marginTop:'10px' }}>rAIny</Title>
             <Button
               icon={<MenuOutlined />}
               onClick={showDrawer}
-              style={{ position: 'absolute', right: 1, top: 1, marginRight: '15px', marginTop: '10px' }}
+              style={{ position: 'absolute', right: 1, top: 1, marginRight: '15px', marginTop: '17px', backgroundColor: sendButtonBackgroundColor }}
             />
             <Drawer
               title="Menu"
@@ -131,7 +131,6 @@ const Layout = ({ children }) => {
                 style={{
                   position: 'absolute',
                   borderRadius: 0,
-                  backgroundColor: 'grey',
                   paddingTop: '10px',
                   paddingLeft: '10px',
                   paddingRight: '10px',
@@ -140,7 +139,18 @@ const Layout = ({ children }) => {
                   height: '91.5%',
                   width: '100%',
                   alignItems: 'center'
-                }}>
+                }}
+              >
+                <img
+                  src="/lion2.png"
+                  alt="Weather"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "block",
+                    margin: "0px 0px 0px 0px",
+                  }}
+                />
                 <div>{children}</div>
                 <div>
                   <Card
@@ -156,9 +166,7 @@ const Layout = ({ children }) => {
                       marginRight: '15px',
                       marginBottom: '90px',
                       backgroundColor: outputBackgroundColor,
-                      opacity: '0.6',
                       borderRadius: '10px',
-                      border: 'dashed',
                       borderColor: '#000000',
                       borderWidth: '2px',
                       boxSizing: 'border-box',

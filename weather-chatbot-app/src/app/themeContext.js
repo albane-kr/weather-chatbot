@@ -11,11 +11,11 @@ export const ThemeProvider = ({ children }) => {
     setIsNightMode(!isNightMode);
   };
 
-  const backgroundColor = isNightMode ? '#9886AB' : '#FCD9D9';
+  const backgroundColor = isNightMode ? '#9886AB' : '#FF9944';
 
-  const titleColor = isNightMode ? '#100775' : '#1ED2FF';
+  const titleColor = isNightMode ? '#100775' : '#B95656';
 
-  const outputBackgroundColor = isNightMode ? '#505964' : '#BEDBFE';
+  const outputBackgroundColor = isNightMode ? '#505964' : '#fda172';
 
   const sendButtonBackgroundColor = isNightMode ? '#4C1C1C' : '#B95656';
 
