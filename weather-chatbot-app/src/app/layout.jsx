@@ -20,6 +20,7 @@ const Layout = ({ children }) => {
   const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! Before we start, please select your preferred language and location in the menu on the top right corner. You can also toggle between day and night mode for a better experience.");
   const [selectedCountry, setSelectedCountry] = useState('LU');
   const [selectedCity, setSelectedCity] = useState('Luxembourg');
+  const [weatherIcon, setWeatherIcon] = useState('sun');
 
   const countries = Country.getAllCountries()
     .map(country => ({ label: country.name, value: country.isoCode }));
@@ -49,6 +50,14 @@ const Layout = ({ children }) => {
     }
   };
 
+  function getWeatherIconFromWeatherId(weatherId) {
+    if (['1', '2', '3'].includes(String(weatherId))) return 'rain';
+    if (['4', '5', '6'].includes(String(weatherId))) return 'sun';
+    if (['7', '8', '9'].includes(String(weatherId))) return 'cloud';
+    if (['10', '11', '12'].includes(String(weatherId))) return 'snow';
+    return '';
+  }
+
   const handleSend = async () => {
     console.log('Current languageMode:', languageMode);
     try {
@@ -66,9 +75,11 @@ const Layout = ({ children }) => {
 
       const data = await response.json();
       const generatedText = data.response;
+      const weatherId = data.weather_id;
 
       setInputValue('');
       setOutput(generatedText);
+      setWeatherIcon(getWeatherIconFromWeatherId(weatherId));
     } catch (error) {
       console.error('Error generating response:', error);
     }
@@ -170,10 +181,31 @@ const Layout = ({ children }) => {
                       borderColor: '#000000',
                       borderWidth: '2px',
                       boxSizing: 'border-box',
-                      color: isNightMode ? '#FFFFFF' : '#000000'
+                      color: isNightMode ? '#FFFFFF' : '#000000',
                     }}
                   >
-                    <p>{output}</p>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '10px',
+                        left: '10px',
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: '#fff',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 2,
+                      }}
+                    >
+                    {weatherIcon === 'sun' && <span role="img" aria-label="sun" style={{ fontSize: 24 }}>☀️</span>}
+                    {weatherIcon === 'cloud' && <span role="img" aria-label="cloud" style={{ fontSize: 24 }}>☁️</span>}
+                    {weatherIcon === 'rain' && <span role="img" aria-label="rain" style={{ fontSize: 24 }}>☔</span>}
+                    {weatherIcon === 'snow' && <span role="img" aria-label="rain" style={{ fontSize: 24 }}>❄️</span>}
+                    </div>
+                    <p style={{ paddingLeft: "28px", paddingTop: "5px", margin: 0 }}>{output}</p>
                   </Card>
                 <div
                   id='inputArea'

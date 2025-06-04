@@ -161,7 +161,7 @@ def generate_response_api():
 
     #cCall the generate_response function
     response = generate_response(prompt, language, temperature, geolocation, expression, emotion)
-    return jsonify({'response': response, 'session_id': session_id})
+    return jsonify({'response': response, 'session_id': session_id, 'weather_id': weather_id})
 
 if __name__ == '__main__':
     app.run(debug=True)
