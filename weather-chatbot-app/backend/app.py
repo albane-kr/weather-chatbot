@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, session
 import requests
 from flask_cors import CORS
-from llm.LLMAccess import generate_response
+from llm.LLMAccess import generate_response, extract_args_from_input
 import csv
 import random
 from llm.load_text_model import predict_emotion
@@ -9,7 +9,6 @@ import torch
 import os
 from datetime import datetime
 import uuid
-from aiohttp import web
 
 app = Flask(__name__)
 app.secret_key = '06032025'
@@ -19,7 +18,7 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 def get_temperature(csv_path):
     """
-    Retrieves the 12th value of temp from lstm_predictions.csv. Corresponds to the temperature at 12:00 PM on the day of the query.
+    Retrieves the temperature value closest to the current time from lstm_predictions.csv.
     """
     try:
         with open(csv_path, encoding="utf-8") as csvfile:
@@ -42,8 +41,9 @@ def get_temperature(csv_path):
 
 def get_weather_id_from_coco(csv_path):
     """
-    Retrieves the 12th value of coco from lstm_predictions.csv,
+    Retrieves the coco value from the row with the timestamp closest to now,
     rounds it to the nearest integer, and maps it to a weather_id using coco_to_weather_id.csv file mapping.
+    If multiple weather_id are mapped to the same coco_code, one is chosen randomly.
     """
     try:
         with open(csv_path, encoding="utf-8") as csvfile:
@@ -96,7 +96,7 @@ def get_weather_expression(language, weather_id):
 
 def get_weather_forecast(city_name, forecast_hours=72, session_id=None):
     """
-    Calls the external weather API and returns the response JSON.
+    Calls the external weather API and returns the path to the CSV file.
     """
     url = "http://127.0.0.1:5001/weather/predict_lstm"
     payload = {
@@ -124,11 +124,16 @@ def generate_response_api():
         print(f"Using existing session ID: {session_id}")
 
     data = request.json
-    prompt = data.get('prompt')
+    user_input = data.get('prompt')
     language = data.get('language')
-    geolocation = data.get('geolocation')
+
+    # extract arguments using the LLM
+    args = extract_args_from_input(user_input)
+    geolocation = args.get("geolocation") or data.get('geolocation')
+    prompt = args.get("prompt") or user_input
     print(f"Received prompt: {prompt}, language: {language}, geolocation: {geolocation}")
 
+    # retrieve weather data
     weather_data = get_weather_forecast(geolocation, session_id=session_id)
     if not weather_data:
         return jsonify({'error': 'Failed to retrieve weather data'}), 500
@@ -148,12 +153,13 @@ def generate_response_api():
     if not expression:
         return jsonify({'error': 'Failed to retrieve weather expression'}), 500
     
-    emotion = predict_emotion(prompt, device)
+    # predict emotion using prompt and expression
+    emotion = predict_emotion(f"{prompt} {expression}", device)
     print(f"Detected Emotion: {emotion}")
     if not emotion:
-        return jsonify({'error': 'Failed to detect emotion'}), 500
+        emotion = "neutral"
 
-    # Call the generate_response function
+    #cCall the generate_response function
     response = generate_response(prompt, language, temperature, geolocation, expression, emotion)
     return jsonify({'response': response, 'session_id': session_id})
 
