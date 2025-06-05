@@ -51,10 +51,18 @@ const Layout = ({ children }) => {
   };
 
   function getWeatherIconFromWeatherId(weatherId) {
-    if (['1', '2', '3'].includes(String(weatherId))) return 'rain';
-    if (['4', '5', '6'].includes(String(weatherId))) return 'sun';
-    if (['7', '8', '9'].includes(String(weatherId))) return 'cloud';
-    if (['10', '11', '12'].includes(String(weatherId))) return 'snow';
+    if (['1'].includes(String(weatherId))) return 'light_rain';
+    if (['2'].includes(String(weatherId))) return 'medium_rain';
+    if (['3'].includes(String(weatherId))) return 'high_rain';
+    if (['4'].includes(String(weatherId))) return 'light_sun';
+    if (['5'].includes(String(weatherId))) return 'medium_sun';
+    if (['6'].includes(String(weatherId))) return 'high_sun';
+    if (['7'].includes(String(weatherId))) return 'light_cloud';
+    if (['8'].includes(String(weatherId))) return 'medium_cloud';
+    if (['9'].includes(String(weatherId))) return 'high_cloud';
+    if (['10'].includes(String(weatherId))) return 'light_snow';
+    if (['11'].includes(String(weatherId))) return 'medium_snow';
+    if (['12'].includes(String(weatherId))) return 'high_snow';
     return 'lion';
   }
 
@@ -204,10 +212,18 @@ const Layout = ({ children }) => {
                       }}
                     >
                     {weatherIcon === 'lion' && <span role="img" aria-label="lion" style={{ fontSize: 24 }}>🦁</span>}
-                    {weatherIcon === 'sun' && <span role="img" aria-label="sun" style={{ fontSize: 24 }}>☀️</span>}
-                    {weatherIcon === 'cloud' && <span role="img" aria-label="cloud" style={{ fontSize: 24 }}>☁️</span>}
-                    {weatherIcon === 'rain' && <span role="img" aria-label="rain" style={{ fontSize: 24 }}>☔</span>}
-                    {weatherIcon === 'snow' && <span role="img" aria-label="rain" style={{ fontSize: 24 }}>❄️</span>}
+                    {weatherIcon === 'light_sun' && <span role="img" aria-label="light_sun" style={{ fontSize: 24 }}>🌤️</span>}
+                    {weatherIcon === 'medium_sun' && <span role="img" aria-label="medium_sun" style={{ fontSize: 24 }}>☀️</span>}
+                    {weatherIcon === 'high_sun' && <span role="img" aria-label="high_sun" style={{ fontSize: 24 }}>🌞</span>}
+                    {weatherIcon === 'light_cloud' && <span role="img" aria-label="light_cloud" style={{ fontSize: 24 }}>🌥️</span>}
+                    {weatherIcon === 'medium_cloud' && <span role="img" aria-label="medium_cloud" style={{ fontSize: 24 }}>☁️</span>}
+                    {weatherIcon === 'high_cloud' && <span role="img" aria-label="high_cloud" style={{ fontSize: 24 }}>🌫️</span>}
+                    {weatherIcon === 'light_rain' && <span role="img" aria-label="light_rain" style={{ fontSize: 24 }}>🌦️</span>}
+                    {weatherIcon === 'medium_rain' && <span role="img" aria-label="medium_rain" style={{ fontSize: 24 }}>🌧️</span>}
+                    {weatherIcon === 'high_rain' && <span role="img" aria-label="high_rain" style={{ fontSize: 24 }}>⛈️</span>}
+                    {weatherIcon === 'light_snow' && <span role="img" aria-label="light_rain" style={{ fontSize: 24 }}>❄️</span>}
+                    {weatherIcon === 'medium_snow' && <span role="img" aria-label="medium_rain" style={{ fontSize: 24 }}>🌨️</span>}
+                    {weatherIcon === 'high_snow' && <span role="img" aria-label="high_rain" style={{ fontSize: 24 }}>☃️</span>}
                     </div>
                     <p style={{ paddingLeft: "28px", paddingTop: "5px", margin: 0 }}>{output}</p>
                   </Card>
