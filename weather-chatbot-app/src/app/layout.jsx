@@ -20,7 +20,7 @@ const Layout = ({ children }) => {
   const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! Before we start, please select your preferred language and location in the menu on the top right corner. You can also toggle between day and night mode for a better experience.");
   const [selectedCountry, setSelectedCountry] = useState('LU');
   const [selectedCity, setSelectedCity] = useState('Luxembourg');
-  const [weatherIcon, setWeatherIcon] = useState('sun');
+  const [weatherIcon, setWeatherIcon] = useState('lion');
 
   const countries = Country.getAllCountries()
     .map(country => ({ label: country.name, value: country.isoCode }));
@@ -55,7 +55,7 @@ const Layout = ({ children }) => {
     if (['4', '5', '6'].includes(String(weatherId))) return 'sun';
     if (['7', '8', '9'].includes(String(weatherId))) return 'cloud';
     if (['10', '11', '12'].includes(String(weatherId))) return 'snow';
-    return '';
+    return 'lion';
   }
 
   const handleSend = async () => {
@@ -76,10 +76,13 @@ const Layout = ({ children }) => {
       const data = await response.json();
       const generatedText = data.response;
       const weatherId = data.weather_id;
+      console.log('data:', data);
 
       setInputValue('');
       setOutput(generatedText);
       setWeatherIcon(getWeatherIconFromWeatherId(weatherId));
+      console.log('Weather ID:', weatherId);
+      
     } catch (error) {
       console.error('Error generating response:', error);
     }
@@ -200,6 +203,7 @@ const Layout = ({ children }) => {
                         zIndex: 2,
                       }}
                     >
+                    {weatherIcon === 'lion' && <span role="img" aria-label="lion" style={{ fontSize: 24 }}>🦁</span>}
                     {weatherIcon === 'sun' && <span role="img" aria-label="sun" style={{ fontSize: 24 }}>☀️</span>}
                     {weatherIcon === 'cloud' && <span role="img" aria-label="cloud" style={{ fontSize: 24 }}>☁️</span>}
                     {weatherIcon === 'rain' && <span role="img" aria-label="rain" style={{ fontSize: 24 }}>☔</span>}
