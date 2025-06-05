@@ -1,5 +1,19 @@
 'use client';
 
+if (typeof window !== "undefined") {
+  const originalError = console.error;
+  console.error = (...args) => {
+    if (
+      typeof args[0] === "string" &&
+      args[0].includes("[antd: compatible] antd v5 support React is 16 ~ 18")
+    ) {
+      return;
+    }
+    originalError(...args);
+  };
+}
+
+import React from 'react';
 import { useState } from 'react';
 import { ConfigProvider, Button, Drawer, Card, Radio, Select } from 'antd';
 import 'antd/dist/reset.css';
@@ -9,6 +23,28 @@ import Title from 'antd/es/typography/Title';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import TextArea from 'antd/es/input/TextArea';
 import { Country, City } from 'country-state-city';
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // You can log error info here if needed
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h2>Something went wrong.</h2>;
+    }
+    return this.props.children;
+  }
+}
 
 const Layout = ({ children }) => {
   const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor} = useTheme();
@@ -98,6 +134,7 @@ const Layout = ({ children }) => {
 
   return (
     <HelmetProvider>
+      <ErrorBoundary>
       <html suppressHydrationWarning>
         <Helmet>
           <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb&display=swap" rel="stylesheet" />
@@ -275,6 +312,7 @@ const Layout = ({ children }) => {
           </ConfigProvider>
         </body>
       </html>
+      </ErrorBoundary>
     </HelmetProvider>
   );
 };
