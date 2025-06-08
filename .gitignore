@@ -1,0 +1,6 @@
+forecasting_service_training/data/*
+forecasting_service_training/data_prcp/*
+forecasting_service_training/data_temp/*
+forecasting_service_training/data_temp_min/*
+forecasting_service_training/data_temp_max/*
+forecasting_service_training/data_prcp_summed/*
