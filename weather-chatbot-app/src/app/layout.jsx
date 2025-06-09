@@ -15,14 +15,13 @@ if (typeof window !== "undefined") {
 
 import React from 'react';
 import { useState } from 'react';
-import { ConfigProvider, Button, Drawer, Card, Radio, Select } from 'antd';
+import { ConfigProvider, Button, Card } from 'antd';
 import 'antd/dist/reset.css';
 import { ThemeProvider, useTheme } from './themeContext';
-import { MenuOutlined, SunOutlined, MoonOutlined, SendOutlined } from '@ant-design/icons';
+import { SunOutlined, MoonOutlined, SendOutlined } from '@ant-design/icons';
 import Title from 'antd/es/typography/Title';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import TextArea from 'antd/es/input/TextArea';
-import { Country, City } from 'country-state-city';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -48,37 +47,10 @@ class ErrorBoundary extends React.Component {
 
 const Layout = ({ children }) => {
   const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor} = useTheme();
-  const [drawerVisible, setDrawerVisible] = useState(false);
-  const [isGermanMode, setIsGermanMode] = useState(true);
   const [inputValue, setInputValue] = useState('');
-  const maxLength = 100;
-  const languageMode = isGermanMode ? 'German' : 'French';
-  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! Before we start, please select your preferred language and location in the menu on the top right corner. You can also toggle between day and night mode for a better experience.");
-  const [selectedCountry, setSelectedCountry] = useState('LU');
-  const [selectedCity, setSelectedCity] = useState('Luxembourg');
+  const maxLength = 200;
+  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! You can toggle between day and night mode for a better experience.");
   const [weatherIcon, setWeatherIcon] = useState('lion');
-
-  const countries = Country.getAllCountries()
-    .map(country => ({ label: country.name, value: country.isoCode }));
-  
-  const cityList = City.getCitiesOfCountry(selectedCountry)
-    .map(city => ({ label: city.name, value: city.name }));
-  
-  const handleCountryChange = (value) => {
-    setSelectedCountry(value);
-  };
-
-  const handleCityChange = (value) => {
-    setSelectedCity(value);
-  };
-
-  const showDrawer = () => {
-    setDrawerVisible(true);
-  };
-
-  const closeDrawer = () => {
-    setDrawerVisible(false);
-  };
 
   const handleInputChange = (e) => {
     if (e.target.value.length <= maxLength) {
@@ -86,46 +58,24 @@ const Layout = ({ children }) => {
     }
   };
 
-  function getWeatherIconFromWeatherId(weatherId) {
-    if (['1'].includes(String(weatherId))) return 'light_rain';
-    if (['2'].includes(String(weatherId))) return 'medium_rain';
-    if (['3'].includes(String(weatherId))) return 'high_rain';
-    if (['4'].includes(String(weatherId))) return 'light_sun';
-    if (['5'].includes(String(weatherId))) return 'medium_sun';
-    if (['6'].includes(String(weatherId))) return 'high_sun';
-    if (['7'].includes(String(weatherId))) return 'light_cloud';
-    if (['8'].includes(String(weatherId))) return 'medium_cloud';
-    if (['9'].includes(String(weatherId))) return 'high_cloud';
-    if (['10'].includes(String(weatherId))) return 'light_snow';
-    if (['11'].includes(String(weatherId))) return 'medium_snow';
-    if (['12'].includes(String(weatherId))) return 'high_snow';
-    return 'lion';
-  }
-
   const handleSend = async () => {
-    console.log('Current languageMode:', languageMode);
     try {
-      const response = await fetch('http://127.0.0.1:5000/generate-response', {
+      const response = await fetch('http://127.0.0.1:5000/api/weather', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: inputValue,
-          language: languageMode,
-          geolocation: selectedCity
+          prompt: inputValue
         }),
       });
 
       const data = await response.json();
-      const generatedText = data.response;
-      const weatherId = data.weather_id;
+      const generatedText = data.output;
       console.log('data:', data);
 
       setInputValue('');
       setOutput(generatedText);
-      setWeatherIcon(getWeatherIconFromWeatherId(weatherId));
-      console.log('Weather ID:', weatherId);
       
     } catch (error) {
       console.error('Error generating response:', error);
@@ -143,47 +93,10 @@ const Layout = ({ children }) => {
           <ConfigProvider>
             <Title style={{ color: titleColor, fontFamily: 'Cherry Bomb, sans-serif', left: 1, marginLeft: '10px', marginTop:'10px' }}>rAIny</Title>
             <Button
-              icon={<MenuOutlined />}
-              onClick={showDrawer}
+              icon={isNightMode ? <SunOutlined /> : <MoonOutlined />}
+              onClick={toggleDayNightMode}
               style={{ position: 'absolute', right: 1, top: 1, marginRight: '15px', marginTop: '17px', backgroundColor: sendButtonBackgroundColor }}
             />
-            <Drawer
-              title="Menu"
-              placement="right"
-              onClose={closeDrawer}
-              open={drawerVisible}
-              style={{ backgroundColor }}
-              direction="vertical"
-            >
-              <Button onClick={toggleDayNightMode} style={{ backgroundColor, color: 'darkblue', borderColor: 'darkblue', marginBottom: '10px' }}>
-                {isNightMode ? <SunOutlined /> : <MoonOutlined />} Mode
-              </Button>
-              <Radio.Group
-                value={isGermanMode}
-                onChange={e => setIsGermanMode(e.target.value === true || e.target.value === "true")}
-                options={[{label: 'DE', value: true}, {label: 'FR', value: false}]}
-                block
-                optionType="button"
-                buttonStyle="solid"
-                style={{ backgroundColor, color: 'darkblue', borderColor: 'darkblue', marginBottom: '10px' }}
-              />
-              <Select
-                value={selectedCountry}
-                onChange={handleCountryChange}
-                options={countries}
-                style={{ width: '100%', marginBottom: '10px', backgroundColor, color: 'darkblue', borderColor: 'darkblue' }}
-                placeholder="Select a country"
-              />
-              <Select
-                value={selectedCity}
-                onChange={handleCityChange}
-                options={cityList}
-                showSearch
-                filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
-                style={{ width: '100%', backgroundColor, color: 'darkblue', borderColor: 'darkblue' }}
-                placeholder="Select a city"
-              />
-            </Drawer>
             <div>
               <Card
                 id='weather'
@@ -249,18 +162,6 @@ const Layout = ({ children }) => {
                       }}
                     >
                     {weatherIcon === 'lion' && <span role="img" aria-label="lion" style={{ fontSize: 24 }}>🦁</span>}
-                    {weatherIcon === 'light_sun' && <span role="img" aria-label="light_sun" style={{ fontSize: 24 }}>🌤️</span>}
-                    {weatherIcon === 'medium_sun' && <span role="img" aria-label="medium_sun" style={{ fontSize: 24 }}>☀️</span>}
-                    {weatherIcon === 'high_sun' && <span role="img" aria-label="high_sun" style={{ fontSize: 24 }}>🌞</span>}
-                    {weatherIcon === 'light_cloud' && <span role="img" aria-label="light_cloud" style={{ fontSize: 24 }}>🌥️</span>}
-                    {weatherIcon === 'medium_cloud' && <span role="img" aria-label="medium_cloud" style={{ fontSize: 24 }}>☁️</span>}
-                    {weatherIcon === 'high_cloud' && <span role="img" aria-label="high_cloud" style={{ fontSize: 24 }}>🌫️</span>}
-                    {weatherIcon === 'light_rain' && <span role="img" aria-label="light_rain" style={{ fontSize: 24 }}>🌦️</span>}
-                    {weatherIcon === 'medium_rain' && <span role="img" aria-label="medium_rain" style={{ fontSize: 24 }}>🌧️</span>}
-                    {weatherIcon === 'high_rain' && <span role="img" aria-label="high_rain" style={{ fontSize: 24 }}>⛈️</span>}
-                    {weatherIcon === 'light_snow' && <span role="img" aria-label="light_rain" style={{ fontSize: 24 }}>❄️</span>}
-                    {weatherIcon === 'medium_snow' && <span role="img" aria-label="medium_rain" style={{ fontSize: 24 }}>🌨️</span>}
-                    {weatherIcon === 'high_snow' && <span role="img" aria-label="high_rain" style={{ fontSize: 24 }}>☃️</span>}
                     </div>
                     <p style={{ paddingLeft: "28px", paddingTop: "5px", margin: 0 }}>{output}</p>
                   </Card>
