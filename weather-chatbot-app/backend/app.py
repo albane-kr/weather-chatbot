@@ -1,15 +1,10 @@
-import json
 import requests
 import csv
 import random
-import os
 import torch
-from datetime import datetime
-from io import StringIO
-from typing import Dict, Any, Optional
+from typing import Optional
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import re
 
 from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
@@ -21,72 +16,21 @@ from llm.load_text_model import predict_emotion
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 # Weather processing functions
-def get_temperature(csv_path: str) -> Optional[int]:
+def get_weather_id_from_coco(coco_code: float) -> Optional[str]:
     try:
-        with open(csv_path, encoding="utf-8") as csvfile:
-            reader = csv.DictReader(csvfile)
-            now = datetime.now()
-            closest_row = min(
-                reader,
-                key=lambda row: abs(datetime.fromisoformat(row["time"]) - now)
-            )
-            temp_str = closest_row["temp"]
-            try:
-                temp = float(temp_str)
-                print(f"Raw temperature value (closest time row): {temp}")
-                return int(round(temp))
-            except Exception as e:
-                print(f"Invalid temperature value: {temp_str} ({e})")
-                return None
-    except Exception as e:
-        print(f"Error reading {csv_path}: {e}")
-    return None
-
-def get_precipitation(csv_path: str) -> Optional[int]:
-    try:
-        with open(csv_path, encoding="utf-8") as csvfile:
-            reader = csv.DictReader(csvfile)
-            now = datetime.now()
-            closest_row = min(
-                reader,
-                key=lambda row: abs(datetime.fromisoformat(row["time"]) - now)
-            )
-            prcp_str = closest_row["prcp"]
-            try:
-                prcp = float(prcp_str)
-                print(f"Raw precipitation value (closest time row): {prcp}")
-                return int(round(prcp))
-            except Exception as e:
-                print(f"Invalid precipitation value: {prcp_str} ({e})")
-                return None
-    except Exception as e:
-        print(f"Error reading {csv_path}: {e}")
-    return None
-
-def get_weather_id_from_coco(csv_path: str) -> Optional[str]:
-    try:
-        with open(csv_path, encoding="utf-8") as csvfile:
-            reader = csv.DictReader(csvfile)
-            now = datetime.now()
-            closest_row = min(
-                reader,
-                key=lambda row: abs(datetime.fromisoformat(row["time"]) - now)
-            )
-            coco_value = float(closest_row["coco"])
-            print(f"Raw COCO value (closest time row): {coco_value}")
-            coco_rounded = int(round(coco_value))
-            print(f"Rounded COCO value: {coco_rounded}")
-            weather_ids = []
-            with open("llm/coco_to_weather_id.csv", encoding="utf-8") as mapfile:
-                mapreader = csv.DictReader(mapfile)
-                for row in mapreader:
-                    coco_code = row["coco_code"].strip().rstrip(',')
-                    if coco_code and int(coco_code) == coco_rounded:
-                        weather_ids.append(row["weather_id"].strip())
-            if len(weather_ids) > 0:
-                return random.choice(weather_ids)
-            else:
-                return '00'
+        coco_rounded = int(round(coco_code))
+        print(f"Rounded COCO value: {coco_rounded}")
+        weather_ids = []
+        with open("llm/coco_to_weather_id.csv", encoding="utf-8") as mapfile:
+            mapreader = csv.DictReader(mapfile)
+            for row in mapreader:
+                coco_code = row["coco_code"].strip().rstrip(',')
+                if coco_code and int(coco_code) == coco_rounded:
+                    weather_ids.append(row["weather_id"].strip())
+        if len(weather_ids) > 0:
+            return random.choice(weather_ids)
+        else:
+            return '00'
     except Exception as e:
         print(f"Error processing coco to weather_id: {e}")
     return None
@@ -110,24 +54,22 @@ def get_weather_expression(language: str, weather_id: str) -> str:
                 print(f"Selected expression: {expression}")
                 return expression
         else:
-            return "I am speechless!"
+            return "No comment!"
     except Exception as e:
         print(f"Error reading {filename}: {e}")
         return ""
 
 def get_weather_forecast(city_name: str, forecast_hours: int = 72, session_id: str = None):
-    url = "http://127.0.0.1:5001/weather/predict_lstm"
+    url = "http://127.0.0.1:5001/weather/predict"
     payload = {
         "city_name": city_name,
-        "forecast_hours": forecast_hours,
-        "session_id": session_id
+        "forecast_hours": forecast_hours
     }
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
-        csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), f"../../weather_forecast_api/lstm_predictions_{session_id}.csv"))
-        print(f"Weather forecast CSV saved to: {csv_path}")
-        return csv_path
+        print(f"Weather forecast response: {response.text}")
+        return response
     except Exception as e:
         print(f"Error calling weather API: {e}")
         return None
@@ -167,22 +109,24 @@ def get_weather(city: str, language: str) -> dict:
     Get comprehensive weather information for a specific city using the local weather prediction API.
     """
     try:
-        import uuid
-        session_id = str(uuid.uuid4())
-        print(f"Getting weather forecast for {city} (session: {session_id})")
-        csv_path = get_weather_forecast(city, session_id=session_id)
-        print(f"CSV path: {csv_path}")
-        if not csv_path:
+        print(f"Getting weather forecast for {city}")
+        weather_api_data = get_weather_forecast(city)
+        print(f"Results from API: {weather_api_data}")
+        if not weather_api_data:
             return {"output": f"Failed to retrieve weather data for {city}. Please check if the weather API is running."}
-        if not os.path.exists(csv_path):
-            return {"output": f"Weather data file not found for {city}. The API may not have generated the forecast yet."}
-        temperature = get_temperature(csv_path)
-        if temperature is None:
-            return {"output": f"Failed to retrieve temperature data for {city}."}
-        # precipitation = get_precipitation(csv_path)
-        # if precipitation is None:
-        #     return {"output": f"Failed to retrieve precipitation data for {city}."}
-        weather_id = get_weather_id_from_coco(csv_path)
+        temperature_maximum = weather_api_data.json().get("tmax")
+        if temperature_maximum is None:
+            return {"output": f"Failed to retrieve maximum temperature data for {city}."}
+        temperature_minimum = weather_api_data.json().get("tmin")
+        if temperature_minimum is None:
+            return {"output": f"Failed to retrieve minimum temperature data for {city}."}
+        precipitation = weather_api_data.json().get("prcp")
+        if temperature_maximum is None:
+            return {"output": f"Failed to retrieve precipitation data for {city}."}
+        coco_code = weather_api_data.json().get("coco")
+        if coco_code is None:
+            return {"output": f"Failed to retrieve coco data for {city}."}
+        weather_id = get_weather_id_from_coco(coco_code=coco_code)
         if weather_id is None:
             return {"output": f"Failed to determine weather conditions for {city}."}
         expression = get_weather_expression(language, weather_id)
@@ -190,16 +134,11 @@ def get_weather(city: str, language: str) -> dict:
             expression = "Clear conditions"
         weather_emoji = get_weather_icon_from_weather_id(weather_id)
         response = f"{weather_emoji} Weather in {city}:\n"
-        response += f"🌡️ Temperature: {temperature}°C\n"
-        #response += f"🌧️ Precipitation: {precipitation}mm\n"
+        response += f"🌡️ Temperatures: {temperature_minimum} - {temperature_maximum}°C\n"
+        response += f"🌧️ Precipitation: {precipitation}mm\n"
+        response += f"🌤️ Coco: {coco_code}\n"
         response += f"🌤️ Conditions: {expression}\n"
         response += f"📊 Weather ID: {weather_id}\n"
-        response += f"🕐 Forecast based on current time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        try:
-            os.remove(csv_path)
-            print(f"Cleaned up CSV file: {csv_path}")
-        except Exception as e:
-            print(f"Could not clean up CSV file: {e}")
         return {"output": response}
     except Exception as e:
         return {"output": f"Error getting weather information for {city}: {str(e)}"}
@@ -242,11 +181,10 @@ prompt = ChatPromptTemplate.from_messages([
 Your tasks:
 - Always answer in the same language as the user's input (English, French, or German).
 - When users ask about weather in specific cities, you MUST use the get_weather_smart function to provide detailed weather information, including:
-    - Current temperature
-    - Precipitation amount
-    - Weather conditions and expressions (always use the provided weather expression in your answer)
-    - Forecast timestamp
-    - The weather icon (emoji) corresponding to the weather_id (always include the emoji in your answer after mentioning the weather conditions)
+    - Temperature range (clearly indicate the minimum temperature and maximum temperature)
+    - Precipitation amount in mm
+    - Weather conditions and expressions (always use the provided weather expression in your answer, use get_weather_expression(language, weather_id) to get the expression)
+    - The weather icon (emoji) corresponding to the weather_id (use get_weather_icon_from_weather_id(weather_id) and always include the emoji in your answer after mentioning the weather conditions)
 - If the user's question is not about weather, respond normally without using any tools, but always in the language of the user's input.
 - You MUST answer in the tone of the emotion predicted by the model, which is based on the weather conditions and user question.
 - The weather system supports multiple languages and will automatically detect the appropriate language from the user's question.
