@@ -1,2 +1,2 @@
 name,country,region,wmo,icao,latitude,longitude,elevation,timezone,hourly_start,hourly_end,daily_start,daily_end,monthly_start,monthly_end,distance
-Luxembourg / Luxembourg,LU,LL,06590,ELLX,49.6167,6.2167,376.0,Europe/Luxembourg,1949-01-01,2025-05-26,1947-01-01,2025-05-26,1947-01-01,2022-01-01,23013.341367650944
+Berlin / Alexanderplatz,DE,BE,10389,,52.5167,13.4167,37.0,Europe/Berlin,1969-12-01,2011-07-31,1969-12-02,2011-07-31,1970-01-01,2011-01-01,1364.915174000948

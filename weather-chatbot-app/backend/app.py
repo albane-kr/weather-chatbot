@@ -3,6 +3,7 @@ import requests
 import csv
 import random
 import os
+import torch
 from datetime import datetime
 from io import StringIO
 from typing import Dict, Any, Optional
@@ -14,6 +15,10 @@ from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.agents import create_tool_calling_agent, AgentExecutor
+
+from llm.load_text_model import predict_emotion
+
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 # Weather processing functions
 def get_temperature(csv_path: str) -> Optional[int]:
@@ -32,6 +37,27 @@ def get_temperature(csv_path: str) -> Optional[int]:
                 return int(round(temp))
             except Exception as e:
                 print(f"Invalid temperature value: {temp_str} ({e})")
+                return None
+    except Exception as e:
+        print(f"Error reading {csv_path}: {e}")
+    return None
+
+def get_precipitation(csv_path: str) -> Optional[int]:
+    try:
+        with open(csv_path, encoding="utf-8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            now = datetime.now()
+            closest_row = min(
+                reader,
+                key=lambda row: abs(datetime.fromisoformat(row["time"]) - now)
+            )
+            prcp_str = closest_row["prcp"]
+            try:
+                prcp = float(prcp_str)
+                print(f"Raw precipitation value (closest time row): {prcp}")
+                return int(round(prcp))
+            except Exception as e:
+                print(f"Invalid precipitation value: {prcp_str} ({e})")
                 return None
     except Exception as e:
         print(f"Error reading {csv_path}: {e}")
@@ -57,8 +83,10 @@ def get_weather_id_from_coco(csv_path: str) -> Optional[str]:
                     coco_code = row["coco_code"].strip().rstrip(',')
                     if coco_code and int(coco_code) == coco_rounded:
                         weather_ids.append(row["weather_id"].strip())
-            if weather_ids:
+            if len(weather_ids) > 0:
                 return random.choice(weather_ids)
+            else:
+                return '00'
     except Exception as e:
         print(f"Error processing coco to weather_id: {e}")
     return None
@@ -70,16 +98,17 @@ def get_weather_expression(language: str, weather_id: str) -> str:
         filename = "llm/weather_expressions_DE.csv"
     expressions = []
     try:
-        with open(filename, encoding="utf-8") as csvfile:
-            reader = csv.reader(csvfile)
-            next(reader, None)
-            for row in reader:
-                if len(row) >= 2 and row[0].strip() == str(weather_id):
-                    expressions.append(row[1].strip())
-        if expressions:
-            expression = random.choice(expressions)
-            print(f"Selected expression: {expression}")
-            return expression
+        if weather_id != '00':
+            with open(filename, encoding="utf-8") as csvfile:
+                reader = csv.reader(csvfile)
+                next(reader, None)
+                for row in reader:
+                    if len(row) >= 2 and row[0].strip() == str(weather_id):
+                        expressions.append(row[1].strip())
+            if expressions:
+                expression = random.choice(expressions)
+                print(f"Selected expression: {expression}")
+                return expression
         else:
             return "I am speechless!"
     except Exception as e:
@@ -150,6 +179,9 @@ def get_weather(city: str, language: str) -> dict:
         temperature = get_temperature(csv_path)
         if temperature is None:
             return {"output": f"Failed to retrieve temperature data for {city}."}
+        # precipitation = get_precipitation(csv_path)
+        # if precipitation is None:
+        #     return {"output": f"Failed to retrieve precipitation data for {city}."}
         weather_id = get_weather_id_from_coco(csv_path)
         if weather_id is None:
             return {"output": f"Failed to determine weather conditions for {city}."}
@@ -159,6 +191,7 @@ def get_weather(city: str, language: str) -> dict:
         weather_emoji = get_weather_icon_from_weather_id(weather_id)
         response = f"{weather_emoji} Weather in {city}:\n"
         response += f"🌡️ Temperature: {temperature}°C\n"
+        #response += f"🌧️ Precipitation: {precipitation}mm\n"
         response += f"🌤️ Conditions: {expression}\n"
         response += f"📊 Weather ID: {weather_id}\n"
         response += f"🕐 Forecast based on current time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
@@ -184,7 +217,18 @@ def get_weather_smart(city: str, user_question: str = "") -> dict:
     elif any(word in question_lower for word in ["wetter", "temperatur", "german", "deutsch"]):
         language = "german"
     print(f"Detected language: {language}")
-    return get_weather.invoke({"city": city, "language": language})
+    
+    # Get the weather response
+    weather_result = get_weather.invoke({"city": city, "language": language})
+    weather_output = weather_result.get("output", "")
+    
+    # Predict emotion using your model
+    emotion = predict_emotion(weather_output, device)
+    
+    # Optionally, add the emotion to the output (as text or emoji)
+    weather_output_with_emotion = f"{weather_output}\nEmotion: {emotion}"
+    
+    return {"output": weather_output_with_emotion}
 
 # LangChain agent setup
 llm = ChatOllama(
@@ -199,10 +243,12 @@ Your tasks:
 - Always answer in the same language as the user's input (English, French, or German).
 - When users ask about weather in specific cities, you MUST use the get_weather_smart function to provide detailed weather information, including:
     - Current temperature
+    - Precipitation amount
     - Weather conditions and expressions (always use the provided weather expression in your answer)
     - Forecast timestamp
     - The weather icon (emoji) corresponding to the weather_id (always include the emoji in your answer after mentioning the weather conditions)
 - If the user's question is not about weather, respond normally without using any tools, but always in the language of the user's input.
+- You MUST answer in the tone of the emotion predicted by the model, which is based on the weather conditions and user question.
 - The weather system supports multiple languages and will automatically detect the appropriate language from the user's question.
 - Extract the city name from the user's question and call the function with both the city name and the original user question for language detection.
 - If the user's question is not about weather, respond normally without using any tools and don't mention anything about weather API, but always in the language of the user's input.
