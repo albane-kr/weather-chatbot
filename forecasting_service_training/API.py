@@ -30,7 +30,7 @@ api = Api(
                 "It fetches historical weather data from the closest weather station and generates predictions for the next specified hours.",
 )
 
-LSTM_MODEL_PATH_TEMP = 'best_lstm_model.pt'
+LSTM_MODEL_PATH_TEMP = 'last_model_temp_lstm.pt'
 if not os.path.exists(LSTM_MODEL_PATH_TEMP):
     print(f"Model file '{LSTM_MODEL_PATH_TEMP}' not found. Please ensure the model is trained and available. Switching to CNN model")
 
@@ -176,6 +176,36 @@ def get_weather_condition_code(prcp, temp_min, temp_max):
     else:
         return 0  # Clear
 
+def predict_temp_lstm(temp_data, device):
+    """
+    Predict next day's temp_max and temp_min using the LSTM model.
+    temp_data: pd.DataFrame with columns ['temp_max', 'temp_min', 'lat', 'lon', 'date'] for the last 7 days
+    device: torch.device
+    Returns: (pred_temp_max, pred_temp_min)
+    """
+    input_cols = ['temp_max', 'temp_min', 'lat', 'lon', 'date']  # 5 columns
+    temp_data = temp_data.copy()
+    # Convert 'date' column to numeric (ordinal)
+    temp_data['date'] = pd.to_datetime(temp_data['date']).map(lambda d: d.toordinal())
+    scalers = []
+    for i in temp_data[input_cols].columns:
+        scaler = StandardScaler()
+        temp_data[i] = scaler.fit_transform(temp_data[i].values.reshape(-1, 1)).flatten()
+        scalers.append(scaler)
+    x = temp_data[input_cols].values.astype(np.float32)  # shape (7, 5)
+    x_tensor = torch.tensor(x, dtype=torch.float32).unsqueeze(0).to(device)  # shape (1, 35)
+
+    model = WeatherLSTM(input_size=5, hidden_size=64, output_size=5, sequence_length=7, num_layers=3, dropout=0)
+    model.load_state_dict(torch.load(LSTM_MODEL_PATH_TEMP, map_location=device))
+    model.to(device)
+    model.eval()
+
+    with torch.no_grad():
+        pred = model(x_tensor).cpu().numpy().flatten()  # shape (5,)
+    pred_temp_max = scalers[0].inverse_transform([[pred[0]]])[0, 0]
+    pred_temp_min = scalers[1].inverse_transform([[pred[1]]])[0, 0]
+    print(f"Predicted max temperature: {pred_temp_max}, Predicted min temperature: {pred_temp_min}")
+    return pred_temp_max, pred_temp_min
 def predict_temp_cnn(temp_data, device):
     """
     Predict next day's temp_max and temp_min using the CNN model.
@@ -265,7 +295,15 @@ class WeatherPredictionLSTM(Resource):
             return {"error": "No weather data available for the specified station."}, 404
         print(f"Weather data for station {station} fetched successfully.")
         print(f"Temperature data shape: {temp_data.shape}, Precipitation data shape: {prcp_data.shape}")
-        temp_max, temp_min = predict_temp_cnn(temp_data, device)
+        
+
+        if not os.path.exists(LSTM_MODEL_PATH_TEMP):
+            print(f"Model file '{LSTM_MODEL_PATH_TEMP}' not found. Switching to CNN model.")
+            temp_max, temp_min = predict_temp_cnn(temp_data, device)
+        else:
+            print(f"Using LSTM model for temperature prediction.")
+            temp_max, temp_min = predict_temp_lstm(temp_data, device)
+
         prcp = predict_prcp(prcp_data, device)
         # Simple decision tree for weather condition code (coco)
         # 0: Clear, 1: Partly Cloudy, 2: Cloudy, 3: Rain, 4: Heavy Rain, 5: Snow, 6: Thunderstorm, 7: Fog, 8: Extreme Heat, 9: Extreme Cold
