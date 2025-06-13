@@ -49,8 +49,8 @@ const Layout = ({ children }) => {
   const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor} = useTheme();
   const [inputValue, setInputValue] = useState('');
   const maxLength = 200;
-  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! You can toggle between day and night mode for a better experience.");
-  const [weatherIcon, setWeatherIcon] = useState('lion');
+  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! I mainly talk French and German though! By the way, you can toggle between day and night mode for a better experience.");
+  const [weatherIcon, setWeatherIcon] = useState('frog');
 
   const handleInputChange = (e) => {
     if (e.target.value.length <= maxLength) {
@@ -114,7 +114,7 @@ const Layout = ({ children }) => {
                 }}
               >
                 <img
-                  src="/lion2.png"
+                  src="/frog1.png"
                   alt="Weather"
                   style={{
                     width: "100%",
@@ -161,7 +161,7 @@ const Layout = ({ children }) => {
                         zIndex: 2,
                       }}
                     >
-                    {weatherIcon === 'lion' && <span role="img" aria-label="lion" style={{ fontSize: 24 }}>🦁</span>}
+                    {weatherIcon === 'frog' && <span role="img" aria-label="lion" style={{ fontSize: 24 }}>🐸</span>}
                     </div>
                     <p style={{ paddingLeft: "28px", paddingTop: "5px", margin: 0 }}>{output}</p>
                   </Card>

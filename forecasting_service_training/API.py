@@ -157,7 +157,7 @@ def find_closest_station(city_coordinates: tuple) -> str|None:
     return None
 
 def get_weather_condition_code(prcp, temp_min, temp_max):
-    if prcp > 20:
+    if prcp > 25:
         return 4  # Heavy Rain
     elif prcp > 10:
         if temp_max < 2:

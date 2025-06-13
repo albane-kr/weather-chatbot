@@ -11,13 +11,13 @@ export const ThemeProvider = ({ children }) => {
     setIsNightMode(!isNightMode);
   };
 
-  const backgroundColor = isNightMode ? '#9886AB' : '#FF9944';
+  const backgroundColor = isNightMode ? '#9886AB' : '#ecebbd';
 
-  const titleColor = isNightMode ? '#100775' : '#B95656';
+  const titleColor = isNightMode ? '#100775' : '#228b22';
 
-  const outputBackgroundColor = isNightMode ? '#505964' : '#fda172';
+  const outputBackgroundColor = isNightMode ? '#505964' : '#d0db61';
 
-  const sendButtonBackgroundColor = isNightMode ? '#4C1C1C' : '#B95656';
+  const sendButtonBackgroundColor = isNightMode ? '#4C1C1C' : '#228b22';
 
   return (
     <ThemeContext.Provider value={{ isNightMode, toggleDayNightMode, backgroundColor, titleColor, outputBackgroundColor, sendButtonBackgroundColor }}>

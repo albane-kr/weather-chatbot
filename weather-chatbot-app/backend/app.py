@@ -10,6 +10,7 @@ from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.agents import create_tool_calling_agent, AgentExecutor
+from langchain.memory import ConversationBufferMemory
 
 from llm.load_text_model import predict_emotion
 
@@ -59,7 +60,7 @@ def get_weather_expression(language: str, weather_id: str) -> str:
         print(f"Error reading {filename}: {e}")
         return ""
 
-def get_weather_forecast(city_name: str, forecast_hours: int = 72, session_id: str = None):
+def get_weather_forecast(city_name: str, forecast_hours: int = 72):
     url = "http://127.0.0.1:5001/weather/predict"
     payload = {
         "city_name": city_name,
@@ -195,7 +196,8 @@ Your tasks:
     ("placeholder", "{agent_scratchpad}"),
 ])
 agent = create_tool_calling_agent(llm, tools, prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+memory = ConversationBufferMemory(return_messages=True)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, memory=memory, max_iterations=5)
 
 # --- Flask app for frontend integration ---
 app = Flask(__name__)
