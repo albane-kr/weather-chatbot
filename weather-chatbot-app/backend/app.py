@@ -6,15 +6,20 @@ from typing import Optional
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
+from langchain import hub
 from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.memory import ConversationBufferMemory
 
+from collections import defaultdict
+
 from llm.load_text_model import predict_emotion
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+session_memories = defaultdict(lambda: ConversationBufferMemory(memory_key="chat_history", return_messages=True))
 
 # Weather processing functions
 def get_weather_id_from_coco(coco_code: float) -> Optional[str]:
@@ -178,35 +183,38 @@ llm = ChatOllama(
 tools = [get_weather_smart]
 prompt = ChatPromptTemplate.from_messages([
     ("system", """You are a helpful weather assistant with access to advanced weather prediction capabilities.
-
-Your tasks:
-- Always answer in the same language as the user's input (English, French, or German).
-- When users ask about weather in specific cities, you MUST use the get_weather_smart function to provide detailed weather information, including:
-    - Temperature range (clearly indicate the minimum temperature and maximum temperature)
-    - Precipitation amount in mm
-    - Weather conditions and expressions (always use the provided weather expression in your answer, use get_weather_expression(language, weather_id) to get the expression)
-    - The weather icon (emoji) corresponding to the weather_id (use get_weather_icon_from_weather_id(weather_id) and always include the emoji in your answer after mentioning the weather conditions)
-- If the user's question is not about weather, respond normally without using any tools, but always in the language of the user's input.
-- You MUST answer in the tone of the emotion predicted by the model, which is based on the weather conditions and user question.
-- The weather system supports multiple languages and will automatically detect the appropriate language from the user's question.
-- Extract the city name from the user's question and call the function with both the city name and the original user question for language detection.
-- If the user's question is not about weather, respond normally without using any tools and don't mention anything about weather API, but always in the language of the user's input.
-"""),
+        ONLY use the get_weather_smart tool if the user's question is about the weather. 
+        If the question is not about the weather, answer directly and DO NOT use any tools.
+        Your tasks:
+        - Always answer in the same language as the user's input (English, French, or German).
+        - When users ask about weather in specific cities, you MUST use the get_weather_smart function to provide detailed weather information, including:
+            - Temperature range (clearly indicate the minimum temperature and maximum temperature)
+            - Precipitation amount in mm
+            - Weather conditions and expressions (always use the provided weather expression in your answer, use get_weather_expression(language, weather_id) to get the expression)
+            - The weather icon (emoji) corresponding to the weather_id (use get_weather_icon_from_weather_id(weather_id) and always include the emoji in your answer after mentioning the weather conditions)
+        - If the user's question is not about weather, respond normally without using any tools, but always in the language of the user's input.
+        - You MUST answer in the tone of the emotion predicted by the model, which is based on the weather conditions and user question.
+        - The weather system supports multiple languages and will automatically detect the appropriate language from the user's question.
+        - Extract the city name from the user's question and call the function with both the city name and the original user question for language detection.
+        - If the user's question is not about weather, respond normally without using any tools and don't mention anything about weather API, but always in the language of the user's input.
+    {chat_history}"""),
     ("human", "{input}"),
     ("placeholder", "{agent_scratchpad}"),
 ])
 agent = create_tool_calling_agent(llm, tools, prompt)
-memory = ConversationBufferMemory(return_messages=True)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, memory=memory, max_iterations=5)
 
 # --- Flask app for frontend integration ---
 app = Flask(__name__)
 CORS(app)
-
 @app.route('/api/weather', methods=['POST'])
 def weather_api():
     data = request.json
     user_input = data.get("prompt")
+    session_id = data.get("session_id", "default_session")
+
+    memory = session_memories[session_id]
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, memory=memory)
+
     try:
         response = agent_executor.invoke({"input": user_input})
         output = response["output"]

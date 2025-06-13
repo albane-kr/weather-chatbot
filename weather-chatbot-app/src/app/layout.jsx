@@ -46,6 +46,12 @@ class ErrorBoundary extends React.Component {
 }
 
 const Layout = ({ children }) => {
+  let sessionId = localStorage.getItem('weatherbot_session_id');
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem('weatherbot_session_id', sessionId);
+  }
+
   const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor} = useTheme();
   const [inputValue, setInputValue] = useState('');
   const maxLength = 200;
@@ -66,7 +72,8 @@ const Layout = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: inputValue
+          prompt: inputValue,
+          session_id: sessionId
         }),
       });
 
