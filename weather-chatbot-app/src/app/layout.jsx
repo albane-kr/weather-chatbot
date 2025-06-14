@@ -56,7 +56,7 @@ const Layout = ({ children }) => {
   const { backgroundColor, titleColor, sendButtonBackgroundColor, outputBackgroundColor } = useTheme();
   const [inputValue, setInputValue] = useState('');
   const maxLength = 200;
-  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! You ca talk to me in English, French and German!");
+  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly multilingual weather chatbot! You can talk to me in English, French and German! (Sorry, I can't speak Luxembourgish yet, but I'm working on it!)");
   const [weatherIcon, setWeatherIcon] = useState('frog');
 
   const handleInputChange = (e) => {
