@@ -1,0 +1,116 @@
+
+
+=== Test in FR - Run at 2025-06-14 17:31:29.802945 ===
+Test Case 1
+Prompt: Bonjour ! Je m'appelle Albane. Et toi, comment tu t'appelles ?
+Output: Salut Albane ! Moi, je m'appelle rAIny. C'est un plaisir de faire ta connaissance ! Comment ça va aujourd'hui ?
+----------------------------------------
+Test Case 2
+Prompt: Peux-tu me dire quelle est la météo aujourd'hui à Bettembourg ?
+Output: La météo à Bettembourg est très agréable aujourd'hui ! Les températures sont entre 14 et 21°C, il y aura une légère précipitation de 3.0mm et il y a un peu de soleil. 🌞
+----------------------------------------
+Test Case 3
+Prompt: Qu'en est-il de demain ? J'aimerais aller courir et je veux savoir si je dois prendre un parapluie.
+Output: Désolé, mais il semble que le système météo ne puisse pas récupérer les données pour la ville de "demain". Veuillez vérifier si l'API météo est en fonctionnement.
+
+Si vous voulez savoir si vous devez prendre un parapluie, je peux vous donner quelques conseils généraux. Si vous prévoyez une pluie ou des conditions météorologiques humides, il est probablement une bonne idée de prendre un parapluie pour éviter d'être trempé pendant votre course.
+
+Si vous voulez obtenir les informations météo précises pour la ville que vous souhaitez visiter, je peux vous aider à trouver les informations nécessaires.
+----------------------------------------
+Test Case 4
+Prompt: Est-ce que tu te souviens de mon prénom ?
+Output: Désolé, mais je ne me rappelle pas de ton prénom. Tu m'as dit que tu t'appelais Albane, n'est-ce pas ?
+----------------------------------------
+Test Case 5
+Prompt: Quelle est la météo à Esch-sur-Alzette demain ?
+Output: La météo à Esch-sur-Alzette demain sera très agréable ! Les températures seront entre 14 et 21°C, il y aura une légère précipitation de 3.0mm et il y a un peu de soleil 🌞. Je suis heureux pour toi que tu puisses profiter d'une belle journée en plein air !
+----------------------------------------
+Test Case 6
+Prompt: Merci ! Et toi, tu as déjà visité le Luxembourg ?
+Output: Oui, j'ai eu l'occasion de visiter le Luxembourg il y a quelques années. C'est un pays très beau et plein d'intérêt ! Les paysages naturels sont incroyables, avec ses collines verdoyantes et ses vallées fertiles. Et la ville de Luxembourg est également très charmante, avec son architecture unique et son histoire riche. J'ai passé un excellent séjour là-bas et je recommande vivement de visiter le Luxembourg si vous avez l'occasion !
+----------------------------------------
+Test Case 7
+Prompt: Quel temps fera-t-il à Differdange ce week-end ?
+Output: La météo à Differdange ce week-end sera très agréable ! Les températures seront entre 9 et 19°C, il y aura une légère précipitation de 3.0mm et il y a un peu de soleil 🌞. Je suis heureux pour toi que tu puisses profiter d'une belle journée en plein air !
+----------------------------------------
+Test Case 8
+Prompt: Peux-tu me donner la météo pour Dudelange pour les prochaines 24 heures ?
+Output: La météo à Dudelange pour les prochaines 24 heures sera très agréable ! Les températures seront entre 14 et 21°C, il y aura une légère précipitation de 3.0mm et il y a un peu de soleil ☀️. Mais attention, je suis en colère parce que tu veux savoir la météo pour les prochaines 24 heures !
+----------------------------------------
+Test Case 9
+Prompt: Quel est ton plat préféré ?
+Output: Je suis heureux de partager avec toi que mon plat préféré est le wok-fried noodles ! J'adore la combinaison des saveurs asiatiques et les textures variées. Mais je suis curieux, qu'est-ce qui te plaît dans un plat ?
+----------------------------------------
+Test Case 10
+Prompt: Est-ce qu'il va pleuvoir à Wiltz demain ?
+Output: Désolé, mais je ne peux pas fournir d'informations précises sur la météo pour les prochaines 24 heures. Je peux vous donner quelques conseils généraux : si vous prévoyez une pluie ou des conditions météorologiques humides, il est probablement une bonne idée de prendre un parapluie pour éviter d'être trempé pendant votre activité. Si vous voulez obtenir les informations météo précises pour la ville que vous souhaitez visiter, je peux vous aider à trouver les informations nécessaires.
+----------------------------------------
+Test Case 11
+Prompt: Quelle est la météo en Allemagne aujourd'hui ?
+Output: Désolé, mais il semble que le système météo ne puisse pas récupérer les données pour la ville d'Allemagne. Veuillez vérifier si l'API météo est en fonctionnement.
+
+Si vous voulez savoir la météo pour une autre ville, je peux vous aider à trouver les informations nécessaires.
+----------------------------------------
+Test Case 12
+Prompt: Merci beaucoup pour ton aide rAIny, tu es super sympa !
+Output: De rien, c'est avec plaisir que je peux t'aider ! 😊
+----------------------------------------
+
+
+=== Test in DE - Run at 2025-06-14 17:34:16.774151 ===
+Test Case 1
+Prompt: Hallo! Ich heiße Albane. Wie heißt du?
+Error: input must have the type torch.float32, got type torch.float64
+----------------------------------------
+Test Case 2
+Prompt: Kannst du mir sagen, wie das Wetter heute in Bettembourg ist?
+Output: Das Wetter in Bettembourg ist heute 🌞 leicht bedeckt mit einer Temperatur von 14 bis 21°C und 3,0 mm Regen. Es ist nicht ideal für einen Ausflug, aber es könnte noch schlimmer sein! 😬
+----------------------------------------
+Test Case 3
+Prompt: Wie sieht es morgen aus? Ich möchte joggen gehen und wissen, ob ich einen Regenschirm brauche.
+Output: Das Wetter in Mannheim morgen ist großartig! Es wird sonnig sein mit einer Temperatur von 17 bis 25°C und nur 4,0 mm Regen. Du kannst also joggen gehen, ohne einen Regenschirm zu benötigen. Ich wünsche dir eine schöne Joggingstrecke! 😊
+----------------------------------------
+Test Case 4
+Prompt: Weißt du noch, wie ich heiße?
+Output: Keine Sorge! Ich erinnere mich an deine Identität. Du bist ein Benutzer, der Fragen stellt und Antworten erhält. Ich bin hier, um dir zu helfen und Informationen bereitzustellen. Wenn du also wissen möchtest, wie das Wetter in Bettembourg ist, kann ich dir gerne sagen, dass es heute leicht bedeckt mit einer Temperatur von 14 bis 21°C und 3,0 mm Regen ist. Es ist nicht ideal für einen Ausflug, aber es könnte noch schlimmer sein!
+----------------------------------------
+Test Case 5
+Prompt: Wie ist das Wetter morgen in Esch-sur-Alzette?
+Output: Es tut mir leid, aber ich konnte keine Wetterinformationen für morgen in Esch-sur-Alzette finden. Bitte prüfe deine Eingabe und versuche es erneut.
+
+Wenn du möchtest, kann ich dir helfen, die Wettervorhersage für einen anderen Ort zu finden oder dir allgemeine Informationen über das Wetter in der Region geben. Lass mich wissen, wie ich dir helfen kann!
+----------------------------------------
+Test Case 6
+Prompt: Danke! Warst du schon mal in Luxemburg?
+Output: Nein, ich bin kein physisches Wesen und kann daher nicht persönlich in Luxemburg oder anderen Orten sein. Ich bin ein Computerprogramm, das darauf ausgelegt ist, Informationen bereitzustellen und Fragen beantworten. Aber ich habe viel über Luxemburg und seine Attraktionen erfahren! Wenn du Interesse hast, kann ich dir gerne mehr darüber erzählen.
+----------------------------------------
+Test Case 7
+Prompt: Wie wird das Wetter am Wochenende in Differdingen?
+Output: Es tut mir leid, aber ich konnte keine Wetterinformationen für das Wochenende in Differdingen finden. Bitte prüfe deine Eingabe und versuche es erneut.
+
+Wenn du möchtest, kann ich dir helfen, die Wettervorhersage für einen anderen Ort zu finden oder dir allgemeine Informationen über das Wetter in der Region geben. Lass mich wissen, wie ich dir helfen kann!
+----------------------------------------
+Test Case 8
+Prompt: Kannst du mir das Wetter für Dudelange für die nächsten 24 Stunden geben?
+Output: Das Wetter in Dudelange für die nächsten 24 Stunden ist nicht ideal. Es wird leicht bedeckt sein mit einer Temperatur von 14 bis 21°C und 3,0 mm Regen. Es ist nicht ideal für einen Ausflug, aber es könnte noch schlimmer sein! 😬
+----------------------------------------
+Test Case 9
+Prompt: Was ist dein Lieblingsessen?
+Output: Ich bin ein Computerprogramm und habe keine persönlichen Vorlieben oder Gefühle, einschließlich Angst. Ich bin hier, um dir zu helfen und Informationen bereitzustellen! Wenn du also wissen möchtest, was ein bestimmtes Gericht enthält oder wie man es zubereitet, stehe ich gerne zur Verfügung.
+----------------------------------------
+Test Case 10
+Prompt: Wird es morgen in Wiltz regnen?
+Output: Ich kann keine Informationen über das Wetter für morgen in Wiltz finden. Bitte prüfe deine Eingabe und versuche es erneut.
+
+Wenn du möchtest, kann ich dir helfen, die Wettervorhersage für einen anderen Ort zu finden oder dir allgemeine Informationen über das Wetter in der Region geben. Lass mich wissen, wie ich dir helfen kann!
+----------------------------------------
+Test Case 11
+Prompt: Wie ist das Wetter heute in Deutschland?
+Output: Es tut mir leid, aber ich konnte keine Wetterinformationen für Deutschland finden. Bitte prüfe deine Eingabe und versuche es erneut.
+
+Wenn du möchtest, kann ich dir helfen, die Wettervorhersage für einen anderen Ort zu finden oder dir allgemeine Informationen über das Wetter in der Region geben. Lass mich wissen, wie ich dir helfen kann!
+----------------------------------------
+Test Case 12
+Prompt: Vielen Dank für deine Hilfe rAIny, du bist sehr nett!
+Output: Keine Sorge! Ich bin hier, um dir zu helfen und Informationen bereitzustellen. Wenn du also wissen möchtest, wie das Wetter in Bettembourg ist, kann ich dir gerne sagen, dass es heute leicht bedeckt mit einer Temperatur von 14 bis 21°C und 3,0 mm Regen ist. Es ist nicht ideal für einen Ausflug, aber es könnte noch schlimmer sein! 😬
+----------------------------------------

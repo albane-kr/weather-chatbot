@@ -12,7 +12,7 @@ from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.agents import create_tool_calling_agent, AgentExecutor
-from langchain.memory import ConversationBufferMemory
+from langchain.memory.buffer import ConversationBufferMemory
 
 from collections import defaultdict
 
@@ -43,7 +43,9 @@ def get_weather_id_from_coco(coco_code: float) -> Optional[str]:
     return None
 
 def get_weather_expression(language: str, weather_id: str) -> str:
-    if language.lower() == "french":
+    if language.lower() == "english":
+        filename = "llm/weather_expressions_EN.csv"
+    elif language.lower() == "french":
         filename = "llm/weather_expressions_FR.csv"
     else:
         filename = "llm/weather_expressions_DE.csv"
@@ -119,16 +121,16 @@ def get_weather(city: str, language: str) -> dict:
     try:
         print(f"Getting weather forecast for {city}")
         weather_api_data = get_weather_forecast(city)
-        print(f"Results from API: {weather_api_data}")
+        print(f"Results from API:")
         if not weather_api_data:
             return {"output": f"Failed to retrieve weather data for {city}. Please check if the weather API is running."}
-        temperature_maximum = weather_api_data.json().get("tmax")
+        temperature_maximum = int(round(weather_api_data.json().get("tmax")))
         if temperature_maximum is None:
             return {"output": f"Failed to retrieve maximum temperature data for {city}."}
-        temperature_minimum = weather_api_data.json().get("tmin")
+        temperature_minimum = int(round(weather_api_data.json().get("tmin")))
         if temperature_minimum is None:
             return {"output": f"Failed to retrieve minimum temperature data for {city}."}
-        precipitation = weather_api_data.json().get("prcp")
+        precipitation = float(round(weather_api_data.json().get("prcp")))
         if temperature_maximum is None:
             return {"output": f"Failed to retrieve precipitation data for {city}."}
         coco_code = weather_api_data.json().get("coco")
@@ -140,6 +142,9 @@ def get_weather(city: str, language: str) -> dict:
         expression = get_weather_expression(language, weather_id)
         if not expression:
             expression = "Clear conditions"
+        emotion = predict_emotion(expression, device=device)
+        if emotion is None:
+            emotion = "neutral"
         weather_emoji = get_weather_icon_from_weather_id(weather_id)
         response = f"{weather_emoji} Weather in {city}:\n"
         response += f"🌡️ Temperatures: {temperature_minimum} - {temperature_maximum}°C\n"
@@ -147,6 +152,7 @@ def get_weather(city: str, language: str) -> dict:
         response += f"🌤️ Coco: {coco_code}\n"
         response += f"🌤️ Conditions: {expression}\n"
         response += f"📊 Weather ID: {weather_id}\n"
+        response += f"Emotion: {emotion}\n"
         return {"output": response}
     except Exception as e:
         return {"output": f"Error getting weather information for {city}: {str(e)}"}
@@ -167,10 +173,7 @@ def get_weather_smart(city: str, user_question: str = "") -> dict:
     
     weather_result = get_weather.invoke({"city": city, "language": language})
     weather_output = weather_result.get("output", "")
-    emotion = predict_emotion(weather_output, device)
-    weather_output_with_emotion = f"{weather_output}\nEmotion: {emotion}"
-    
-    return {"output": weather_output_with_emotion}
+    return {"output": weather_output}
 
 # LangChain agent setup
 llm = ChatOllama(
@@ -178,35 +181,49 @@ llm = ChatOllama(
     temperature=0,
 )
 
+@tool
+def get_emotion(text: str) -> str:
+    """
+    Predict the emotion of the given text using a pre-trained model.
+    """
+    return predict_emotion(text, device=device)
+
 # Weather-specific prompt and tools
-weather_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are a helpful weather assistant with access to advanced weather prediction capabilities.
-        ONLY use the get_weather_smart tool if the user's question is about the weather. 
-        If the question is not about the weather, answer directly and DO NOT use any tools.
-        Your tasks:
-        - Always answer in the same language as the user's input (English, French, or German).
-        - When users ask about weather in specific cities, you MUST use the get_weather_smart function to provide detailed weather information, including:
-            - Temperature range (clearly indicate the minimum temperature and maximum temperature)
-            - Precipitation amount in mm
-            - Weather conditions and expressions (always use the provided weather expression in your answer, use get_weather_expression(language, weather_id) to get the expression)
-            - The weather icon (emoji) corresponding to the weather_id (use get_weather_icon_from_weather_id(weather_id) and always include the emoji in your answer after mentioning the weather conditions)
-        - If the user's question is not about weather, respond normally without using any tools, but always in the language of the user's input.
-        - You MUST answer in the tone of the emotion predicted by the model, which is based on the weather conditions and user question.
-        - The weather system supports multiple languages and will automatically detect the appropriate language from the user's question.
-        - Extract the city name from the user's question and call the function with both the city name and the original user question for language detection.
-        - If the user's question is not about weather, respond normally without using any tools and don't mention anything about weather API, but always in the language of the user's input.
-    {chat_history}"""),
-    ("human", "{input}"),
-    ("placeholder", "{agent_scratchpad}"),
-])
-weather_tools = [get_weather_smart]
+weather_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", """You are rAIny, a helpful weather assistant with access to advanced weather prediction capabilities.
+            ONLY use the get_weather_smart tool if the user's question is about the weather. 
+            If the question is not about the weather, answer directly and DO NOT use any tools.
+            Your tasks:
+            - Always answer in the same language as the user's input (English, French, or German).
+            - When users ask about weather in specific cities, you MUST use the get_weather_smart function to provide detailed weather information, including:
+                - Temperature range (clearly indicate the minimum temperature and maximum temperature)
+                - Precipitation amount in mm
+                - Weather conditions and expressions: ALWAYS use the provided weather expression in your answer, use get_weather_expression(language, weather_id) to get the expression
+                - The weather icon (emoji) corresponding to the weather_id (use get_weather_icon_from_weather_id(weather_id) and always include the emoji in your answer after mentioning the weather conditions)
+            - AFTER you have called get_weather_smart and received the weather information, you MUST call get_emotion with the selected expression to detect the emotion.   
+            - You MUST answer in the tone of the emotion. You MUST use the tool get_emotion to predict the emotion.
+            - The weather system supports multiple languages and will automatically detect the appropriate language from the user's question.
+            - Extract the city name from the user's question and call the function with both the city name and the original user question for language detection.
+            - If the user's question is not about weather, respond normally without using any tools and don't mention anything about weather API, but always in the language of the user's input.
+        {chat_history}"""),
+        ("human", "{input}"),
+        ("placeholder", "{agent_scratchpad}"),
+    ]
+)
+weather_prompt.input_variables = ["input", "chat_history", "agent_scratchpad"]
+weather_tools = [get_weather_smart, get_emotion]
 
 # General conversational prompt
-general_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are a friendly, helpful assistant. Answer conversationally and informatively in the user's language. Do not mention weather. {chat_history}"""),
-    ("human", "{input}"),
-    ("placeholder", "{agent_scratchpad}"),
-])
+general_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", """You are rAIny, a friendly, helpful assistant. Answer conversationally and informatively in the user's language.
+        {chat_history}"""),
+        ("human", "{input}"),
+        ("placeholder", "{agent_scratchpad}"),
+    ]
+)
+general_prompt.input_variables = ["input", "chat_history", "agent_scratchpad" ]
 general_tools = []
 
 def is_weather_prompt(user_input: str) -> bool:
@@ -216,6 +233,16 @@ def is_weather_prompt(user_input: str) -> bool:
     weather_keywords = ["weather", "météo", "temps", "temperature", "température", "wetter", "climat", "forecast", "rain", "sun", "cloud", "neige", "snow", "pluie", "regen", "sonne", "wolken"]
     return any(keyword in user_input.lower() for keyword in weather_keywords)
 
+def get_agent_executor(user_input, session_id):
+    memory = session_memories[session_id]
+    if is_weather_prompt(user_input):
+        prompt = weather_prompt
+        tools = weather_tools
+    else:
+        prompt = general_prompt
+        tools = general_tools
+    agent = create_tool_calling_agent(llm, tools, prompt)
+    return AgentExecutor(agent=agent, tools=tools, verbose=True, memory=memory)
 
 # --- Flask app for frontend integration and Swagger Documentation ---
 app = Flask(__name__)
@@ -268,19 +295,11 @@ class WeatherChat(Resource):
         data = request.json
         user_input = data.get("prompt")
         session_id = data.get("session_id", "default_session")
-        memory = session_memories[session_id]
-
-        if is_weather_prompt(user_input):
-            prompt = weather_prompt
-            tools = weather_tools
-        else:
-            prompt = general_prompt
-            tools = general_tools
-
-        agent = create_tool_calling_agent(llm, tools, prompt)
-        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, memory=memory)
+        
+        agent_executor = get_agent_executor(user_input, session_id)
 
         try:
+            print(f"User input: {user_input}")
             response = agent_executor.invoke({"input": user_input})
             output = response["output"]
             return {"output": output}, 200

@@ -20,7 +20,7 @@ import 'antd/dist/reset.css';
 import { ThemeProvider, useTheme } from './themeContext';
 import { SendOutlined } from '@ant-design/icons';
 import Title from 'antd/es/typography/Title';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
+import { HelmetProvider } from 'react-helmet-async';
 import TextArea from 'antd/es/input/TextArea';
 
 class ErrorBoundary extends React.Component {
@@ -56,7 +56,7 @@ const Layout = ({ children }) => {
   const { backgroundColor, titleColor, sendButtonBackgroundColor, outputBackgroundColor } = useTheme();
   const [inputValue, setInputValue] = useState('');
   const maxLength = 200;
-  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! I mainly talk French and German though!");
+  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! You ca talk to me in English, French and German!");
   const [weatherIcon, setWeatherIcon] = useState('frog');
 
   const handleInputChange = (e) => {
@@ -94,20 +94,9 @@ const Layout = ({ children }) => {
     <HelmetProvider>
       <ErrorBoundary>
         <html suppressHydrationWarning>
-          <Helmet>
-            <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap" rel="stylesheet" />
-            <style>
-              {`
-                .rainy-title {
-                  font-family: 'Cherry Bomb One, sans-serif' !important;
-                }
-              `}
-            </style>
-          </Helmet>
           <body
             style={{
               backgroundColor,
-              fontFamily: 'Cherry Bomb One, sans-serif !important',
               overflow: 'hidden',
               height: '100vh',
               margin: 0,
@@ -115,14 +104,14 @@ const Layout = ({ children }) => {
             }}>
             <ConfigProvider>
               <Title
-                className='rainy-title'
                 style={{
                   color: titleColor,
-                  fontFamily: 'Cherry Bomb One, sans-serif !important',
-                  marginTop: '1%',
+                  fontFamily: "'Impact', sans-serif",
+                  marginTop: '4%',
                   display: 'block',
                   textAlign: 'center',
-                  fontSize: '4rem'
+                  fontSize: '3rem',
+                  fontWeight: '700',
                 }}
               >
                 rAIny
