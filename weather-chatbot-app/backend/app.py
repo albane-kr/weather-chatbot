@@ -5,6 +5,7 @@ import torch
 from typing import Optional
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_restx import Api, Resource, fields, Namespace
 
 from langchain import hub
 from langchain_ollama import ChatOllama
@@ -108,6 +109,7 @@ def get_weather_icon_from_weather_id(weather_id):
         return '☃️'  # high_snow
     return ''  # default
 
+
 # LangChain tool for weather information
 @tool
 def get_weather(city: str, language: str) -> dict:
@@ -155,7 +157,7 @@ def get_weather_smart(city: str, user_question: str = "") -> dict:
     """
     Get weather information with automatic language detection from user question.
     """
-    language = "english"  # default
+    language = "english"
     question_lower = user_question.lower()
     if any(word in question_lower for word in ["météo", "temps", "température", "french", "français"]):
         language = "french"
@@ -163,14 +165,9 @@ def get_weather_smart(city: str, user_question: str = "") -> dict:
         language = "german"
     print(f"Detected language: {language}")
     
-    # Get the weather response
     weather_result = get_weather.invoke({"city": city, "language": language})
     weather_output = weather_result.get("output", "")
-    
-    # Predict emotion using your model
     emotion = predict_emotion(weather_output, device)
-    
-    # Optionally, add the emotion to the output (as text or emoji)
     weather_output_with_emotion = f"{weather_output}\nEmotion: {emotion}"
     
     return {"output": weather_output_with_emotion}
@@ -180,8 +177,9 @@ llm = ChatOllama(
     model="llama3.1",  # Make sure this matches your Ollama model name
     temperature=0,
 )
-tools = [get_weather_smart]
-prompt = ChatPromptTemplate.from_messages([
+
+# Weather-specific prompt and tools
+weather_prompt = ChatPromptTemplate.from_messages([
     ("system", """You are a helpful weather assistant with access to advanced weather prediction capabilities.
         ONLY use the get_weather_smart tool if the user's question is about the weather. 
         If the question is not about the weather, answer directly and DO NOT use any tools.
@@ -201,47 +199,95 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}"),
     ("placeholder", "{agent_scratchpad}"),
 ])
-agent = create_tool_calling_agent(llm, tools, prompt)
+weather_tools = [get_weather_smart]
 
-# --- Flask app for frontend integration ---
+# General conversational prompt
+general_prompt = ChatPromptTemplate.from_messages([
+    ("system", """You are a friendly, helpful assistant. Answer conversationally and informatively in the user's language. Do not mention weather. {chat_history}"""),
+    ("human", "{input}"),
+    ("placeholder", "{agent_scratchpad}"),
+])
+general_tools = []
+
+def is_weather_prompt(user_input: str) -> bool:
+    """
+    Check if the user input is related to weather.
+    """
+    weather_keywords = ["weather", "météo", "temps", "temperature", "température", "wetter", "climat", "forecast", "rain", "sun", "cloud", "neige", "snow", "pluie", "regen", "sonne", "wolken"]
+    return any(keyword in user_input.lower() for keyword in weather_keywords)
+
+
+# --- Flask app for frontend integration and Swagger Documentation ---
 app = Flask(__name__)
 CORS(app)
-@app.route('/api/weather', methods=['POST'])
-def weather_api():
-    data = request.json
-    user_input = data.get("prompt")
-    session_id = data.get("session_id", "default_session")
+api = Api(
+    app,
+    version="1.0",
+    title="Weather Chatbot API",
+    description="This API provides conversational weather and general chat responses with emotion detection.",
+)
+weather_chatbot_ns = Namespace(
+    "weather_chatbot",
+    description="Endpoints for weather chatbot and related operations",
+)
+api.add_namespace(weather_chatbot_ns)
 
-    memory = session_memories[session_id]
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, memory=memory)
+# Input model
+chat_input_model = weather_chatbot_ns.model(
+    'ChatInput', {
+        'prompt': fields.String(
+            required=True,
+            description='User message or question.'
+        ),
+        'session_id': fields.String(
+            required=False,
+            description='Session identifier for conversation memory.'
+        ),
+    }
+)
 
-    try:
-        response = agent_executor.invoke({"input": user_input})
-        output = response["output"]
-        return jsonify({
-            "output": output
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# Output model
+chat_output_model = weather_chatbot_ns.model(
+    'ChatOutput', {
+        'output': fields.String(
+            required=True,
+            description='Chatbot response, possibly including weather data and emotion.'
+        )
+    }
+)
+
+@weather_chatbot_ns.route('/chat')
+class WeatherChat(Resource):
+    @weather_chatbot_ns.expect(chat_input_model)
+    @weather_chatbot_ns.response(200, 'Chatbot response returned.', chat_output_model)
+    @weather_chatbot_ns.response(500, 'Internal server error.')
+    @weather_chatbot_ns.doc(description="Get a conversational response from the weather chatbot. "
+                                "If the prompt is about the weather, the response includes weather data and emotion. "
+                                "Otherwise, the chatbot responds conversationally.")
+    def post(self):
+        data = request.json
+        user_input = data.get("prompt")
+        session_id = data.get("session_id", "default_session")
+        memory = session_memories[session_id]
+
+        if is_weather_prompt(user_input):
+            prompt = weather_prompt
+            tools = weather_tools
+        else:
+            prompt = general_prompt
+            tools = general_tools
+
+        agent = create_tool_calling_agent(llm, tools, prompt)
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, memory=memory)
+
+        try:
+            response = agent_executor.invoke({"input": user_input})
+            output = response["output"]
+            return {"output": output}, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
 
 if __name__ == "__main__":
-    # To test the agent with hardcoded questions, uncomment below:
-    # test_questions = [
-    #     "What's the weather like in Luxembourg?",
-    #     "Quel temps fait-il à Luxembourg?",  # French
-    #     "Wie ist das Wetter in Berlin?",  # German
-    #     "Can you tell me the current weather in Tokyo?",
-    #     "What's the temperature in New York City today?",
-    #     "Météo à Marseille s'il vous plaît",  # French
-    #     "Hello, how are you?"  # Non-weather question
-    # ]
-    # for question in test_questions:
-    #     print(f"\n🤔 User: {question}")
-    #     try:
-    #         response = agent_executor.invoke({"input": question})
-    #         print(f"🤖 Assistant: {response['output']}")
-    #     except Exception as e:
-    #         print(f"❌ Error: {str(e)}")
-    #     print("-" * 40)
     print("Starting Flask API for Advanced Weather Assistant...")
     app.run(host="0.0.0.0", port=5000, debug=True)

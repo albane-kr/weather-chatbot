@@ -14,11 +14,11 @@ if (typeof window !== "undefined") {
 }
 
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ConfigProvider, Button, Card } from 'antd';
 import 'antd/dist/reset.css';
 import { ThemeProvider, useTheme } from './themeContext';
-import { SunOutlined, MoonOutlined, SendOutlined } from '@ant-design/icons';
+import { SendOutlined } from '@ant-design/icons';
 import Title from 'antd/es/typography/Title';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import TextArea from 'antd/es/input/TextArea';
@@ -46,11 +46,16 @@ class ErrorBoundary extends React.Component {
 }
 
 const Layout = ({ children }) => {
-  let sessionId = localStorage.getItem('weatherbot_session_id');
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    localStorage.setItem('weatherbot_session_id', sessionId);
-  }
+  const [sessionId, setSessionId] = useState('');
+
+  useEffect(() => {
+    let sid = localStorage.getItem('weatherbot_session_id');
+    if (!sid) {
+      sid = crypto.randomUUID();
+      localStorage.setItem('weatherbot_session_id', sid);
+    }
+    setSessionId(sid);
+  }, []);
 
   const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor} = useTheme();
   const [inputValue, setInputValue] = useState('');
@@ -66,7 +71,7 @@ const Layout = ({ children }) => {
 
   const handleSend = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/weather', {
+      const response = await fetch('http://127.0.0.1:5000/weather_chatbot/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,16 +99,11 @@ const Layout = ({ children }) => {
       <ErrorBoundary>
       <html suppressHydrationWarning>
         <Helmet>
-          <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb&display=swap" rel="stylesheet" />
+          <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap" rel="stylesheet" />
         </Helmet>
-        <body style={{ backgroundColor, fontFamily: 'Cherry Bomb, sans-serif' }}>
+        <body style={{ backgroundColor, fontFamily: 'Cherry Bomb One, sans-serif' }}>
           <ConfigProvider>
-            <Title style={{ color: titleColor, fontFamily: 'Cherry Bomb, sans-serif', left: 1, marginLeft: '10px', marginTop:'10px' }}>rAIny</Title>
-            <Button
-              icon={isNightMode ? <SunOutlined /> : <MoonOutlined />}
-              onClick={toggleDayNightMode}
-              style={{ position: 'absolute', right: 1, top: 1, marginRight: '15px', marginTop: '17px', backgroundColor: sendButtonBackgroundColor }}
-            />
+            <Title style={{ color: titleColor, fontFamily: 'Cherry Bomb One, sans-serif', marginTop:'3%', display: 'block', textAlign: 'center', fontSize: '4rem' }}>rAIny</Title>
             <div>
               <Card
                 id='weather'
@@ -115,7 +115,7 @@ const Layout = ({ children }) => {
                   paddingRight: '10px',
                   paddingBottom: '10px',
                   marginBottom: '5px',
-                  height: '91.5%',
+                  height: '92%',
                   width: '100%',
                   alignItems: 'center'
                 }}
@@ -150,6 +150,8 @@ const Layout = ({ children }) => {
                       borderWidth: '2px',
                       boxSizing: 'border-box',
                       color: isNightMode ? '#FFFFFF' : '#000000',
+                      maxHeight: '30%', // Set a fixed height (adjust as needed)
+                      overflowY: 'auto', // Enable vertical scroll
                     }}
                   >
                     <div
