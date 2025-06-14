@@ -33,10 +33,6 @@ class ErrorBoundary extends React.Component {
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
-    // You can log error info here if needed
-  }
-
   render() {
     if (this.state.hasError) {
       return <h2>Something went wrong.</h2>;
@@ -57,10 +53,10 @@ const Layout = ({ children }) => {
     setSessionId(sid);
   }, []);
 
-  const { backgroundColor, toggleDayNightMode, isNightMode, titleColor, sendButtonBackgroundColor, outputBackgroundColor} = useTheme();
+  const { backgroundColor, titleColor, sendButtonBackgroundColor, outputBackgroundColor } = useTheme();
   const [inputValue, setInputValue] = useState('');
   const maxLength = 200;
-  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! I mainly talk French and German though! By the way, you can toggle between day and night mode for a better experience.");
+  const [output, setOutput] = useState("Hi! I'm rAIny, your friendly weather chatbot! I mainly talk French and German though!");
   const [weatherIcon, setWeatherIcon] = useState('frog');
 
   const handleInputChange = (e) => {
@@ -88,7 +84,7 @@ const Layout = ({ children }) => {
 
       setInputValue('');
       setOutput(generatedText);
-      
+
     } catch (error) {
       console.error('Error generating response:', error);
     }
@@ -97,131 +93,169 @@ const Layout = ({ children }) => {
   return (
     <HelmetProvider>
       <ErrorBoundary>
-      <html suppressHydrationWarning>
-        <Helmet>
-          <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap" rel="stylesheet" />
-        </Helmet>
-        <body style={{ backgroundColor, fontFamily: 'Cherry Bomb One, sans-serif' }}>
-          <ConfigProvider>
-            <Title style={{ color: titleColor, fontFamily: 'Cherry Bomb One, sans-serif', marginTop:'3%', display: 'block', textAlign: 'center', fontSize: '4rem' }}>rAIny</Title>
-            <div>
-              <Card
-                id='weather'
+        <html suppressHydrationWarning>
+          <Helmet>
+            <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&display=swap" rel="stylesheet" />
+            <style>
+              {`
+                .rainy-title {
+                  font-family: 'Cherry Bomb One, sans-serif' !important;
+                }
+              `}
+            </style>
+          </Helmet>
+          <body
+            style={{
+              backgroundColor,
+              fontFamily: 'Cherry Bomb One, sans-serif !important',
+              overflow: 'hidden',
+              height: '100vh',
+              margin: 0,
+              padding: 0,
+            }}>
+            <ConfigProvider>
+              <Title
+                className='rainy-title'
                 style={{
-                  position: 'absolute',
-                  borderRadius: 0,
-                  paddingTop: '10px',
-                  paddingLeft: '10px',
-                  paddingRight: '10px',
-                  paddingBottom: '10px',
-                  marginBottom: '5px',
-                  height: '92%',
-                  width: '100%',
-                  alignItems: 'center'
+                  color: titleColor,
+                  fontFamily: 'Cherry Bomb One, sans-serif !important',
+                  marginTop: '1%',
+                  display: 'block',
+                  textAlign: 'center',
+                  fontSize: '4rem'
                 }}
               >
-                <img
-                  src="/frog1.png"
-                  alt="Weather"
+                rAIny
+              </Title>
+              <div
+                style={{
+                  position: 'relative',
+                  height: '100%',
+                  width: '100%',
+                  overflow: 'hidden',
+                }}>
+                <Card
+                  id='weather'
                   style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "block",
-                    margin: "0px 0px 0px 0px",
-                  }}
-                />
-                <div>{children}</div>
-                <div>
-                  <Card
-                    id='textOutputArea'
-                    style={{
-                      display: 'flex',
-                      position: 'fixed',
-                      bottom: 0,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '100%',
-                      maxWidth: '97%',
-                      marginRight: '15px',
-                      marginBottom: '90px',
-                      backgroundColor: outputBackgroundColor,
-                      borderRadius: '10px',
-                      borderColor: '#000000',
-                      borderWidth: '2px',
-                      boxSizing: 'border-box',
-                      color: isNightMode ? '#FFFFFF' : '#000000',
-                      maxHeight: '30%', // Set a fixed height (adjust as needed)
-                      overflowY: 'auto', // Enable vertical scroll
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '10px',
-                        left: '10px',
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        background: '#fff',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 2,
-                      }}
-                    >
-                    {weatherIcon === 'frog' && <span role="img" aria-label="lion" style={{ fontSize: 24 }}>🐸</span>}
-                    </div>
-                    <p style={{ paddingLeft: "28px", paddingTop: "5px", margin: 0 }}>{output}</p>
-                  </Card>
-                <div
-                  id='inputArea'
-                  style={{
-                    position: 'fixed',
-                    bottom: 0,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    position: 'absolute',
+                    borderRadius: 0,
+                    paddingTop: '10px',
+                    paddingLeft: '10px',
+                    paddingRight: '10px',
+                    paddingBottom: '10px',
+                    marginBottom: '5px',
                     width: '100%',
-                    maxWidth: '97%',
-                    backgroundColor: backgroundColor,
-                    padding: '5px',
-                    boxSizing: 'border-box',
-                    display: 'flex',
                     alignItems: 'center',
-                    borderRadius: '10px',
-                    marginBottom: '15px',
-                    marginTop: '5px',
-                    borderStyle: 'solid',
-                    borderColor: '#FFFFFF',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 'auto',
+                    overflow: 'hidden',
                   }}
                 >
-                  <TextArea
-                    id='textInputArea'
-                    placeholder="Ask rAIny about the weather..."
-                    autosize={{ minRows: 1, maxRows: 3 }}
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    count={{ show: true, max: maxLength }}
+                  <img
+                    src="/frog1.png"
+                    alt="Weather"
                     style={{
-                      flex: 1,
-                      backgroundColor: backgroundColor,
-                      color: isNightMode ? '#FFFFFF' : '#000000',
-                      border: 'border-box',
-                      borderStyle: 'solid',
-                      borderColor: '#FFFFFF',
-                      resize: 'block',
+                      width: "100%",
+                      height: "100%",
+                      display: "block",
+                      margin: "0px 0px 0px 0px",
                     }}
                   />
-                  <Button id='sendButton' type='primary' onClick={handleSend} style={{ marginLeft: '10px', backgroundColor: sendButtonBackgroundColor }}>
-                    <SendOutlined style={{ color: '#ffff' }} />
-                  </Button>
-                </div>
-                </div>
-              </Card>
-            </div>
-          </ConfigProvider>
-        </body>
-      </html>
+                  <div>{children}</div>
+                  <div>
+                    <Card
+                      id='textOutputArea'
+                      style={{
+                        display: 'flex',
+                        position: 'fixed',
+                        bottom: 0,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '100%',
+                        maxWidth: '97%',
+                        marginRight: '15px',
+                        marginBottom: '90px',
+                        backgroundColor: outputBackgroundColor,
+                        borderRadius: '10px',
+                        borderColor: '#000000',
+                        borderWidth: '2px',
+                        boxSizing: 'border-box',
+                        color: '#000000',
+                        maxHeight: '30%',
+                        overflowY: 'auto',
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '10px',
+                          left: '10px',
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: '#fff',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 2,
+                        }}
+                      >
+                        {weatherIcon === 'frog' && <span role="img" aria-label="lion" style={{ fontSize: 24 }}>🐸</span>}
+                      </div>
+                      <p style={{ paddingLeft: "28px", paddingTop: "5px", margin: 0 }}>{output}</p>
+                    </Card>
+                    <div
+                      id='inputArea'
+                      style={{
+                        position: 'fixed',
+                        bottom: 0,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '100%',
+                        maxWidth: '97%',
+                        backgroundColor: backgroundColor,
+                        padding: '5px',
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '10px',
+                        marginBottom: '15px',
+                        marginTop: '5px',
+                        borderStyle: 'solid',
+                        borderColor: '#FFFFFF',
+                      }}
+                    >
+                      <TextArea
+                        id='textInputArea'
+                        placeholder="Ask rAIny about the weather..."
+                        autosize={{ minRows: 1, maxRows: 3 }}
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        count={{ show: true, max: maxLength }}
+                        style={{
+                          flex: 1,
+                          backgroundColor: backgroundColor,
+                          color: '#000000',
+                          border: 'border-box',
+                          borderStyle: 'solid',
+                          borderColor: '#FFFFFF',
+                          resize: 'block',
+                        }}
+                      />
+                      <Button id='sendButton' type='primary' onClick={handleSend} style={{ marginLeft: '10px', backgroundColor: sendButtonBackgroundColor }}>
+                        <SendOutlined style={{ color: '#ffff' }} />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </ConfigProvider>
+          </body>
+        </html>
       </ErrorBoundary>
     </HelmetProvider>
   );
