@@ -204,7 +204,7 @@ weather_prompt = ChatPromptTemplate.from_messages(
             - AFTER you have called get_weather_smart and received the weather information, you MUST call get_emotion with the selected expression to detect the emotion.   
             - You MUST answer in the tone of the emotion. You MUST use the tool get_emotion to predict the emotion.
             - The weather system supports multiple languages and will automatically detect the appropriate language from the user's question.
-            - Extract the city name from the user's question and call the function with both the city name and the original user question for language detection.
+            - Extract the city name from the user's question and call the function with both the city name and the original user question for language detection. If it is not a city name but a country or region, use the capital city of that country or region for get_weather_smart.
             - If the user's question is not about weather, respond normally without using any tools and don't mention anything about weather API, but always in the language of the user's input.
         {chat_history}"""),
         ("human", "{input}"),
