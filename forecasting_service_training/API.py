@@ -141,19 +141,32 @@ def get_city_coordinates(city_name: str) -> tuple|None:
 
 
 def find_closest_station(city_coordinates: tuple) -> str|None:
-    # Calculate distance to each station and filter by 20 years of data
+    # Filter stations to only airports and calculate distance
     stations = Stations()
-    stations_nearby = stations.nearby(city_coordinates[0], city_coordinates[1])
-    stations_data = stations_nearby.fetch(1)
+    stations = stations.nearby(city_coordinates[0], city_coordinates[1], radius=100000)
+    #stations = stations.inventory('hourly', min_year=2000)  # Ensure at least some data
+    #stations = stations.region(None)  # No region filter, but could be added
+    print(stations)
+    #stations = stations.filter(type='airport')  # Only airports
+    stations_data = stations.fetch()
+    stations_data['nan_count'] = stations_data.isna().sum(axis=1)
+
+
+    stations_data = stations_data.sort_values(by='nan_count')  # Sort by NaN count
+    stations_data = stations_data.groupby('region').head(3)  # Limit to 4 per region
+
+    # Drop the temporary 'nan_count' column
+    stations_data = stations_data.drop(columns=['nan_count'])
+    stations_data = stations_data[stations_data['hourly_start'].notna() & stations_data['hourly_end'].notna() & stations_data['icao'].notna()]
     if not stations_data.empty:
-        # Save station data to a CSV file and return its path
-        station_csv_path = 'station_data.csv'
-        print(f"Closest station found: {stations_data.iloc[0]['name']} at {stations_data.iloc[0]['latitude']}, {stations_data.iloc[0]['longitude']}")
-        print(f"Station ID: {stations_data.iloc[0]['wmo']}")
-        station_id = stations_data.iloc[0]['wmo']
-        hourly_end_date = stations_data.iloc[0]['hourly_end']
+        # Pick the closest airport station
+        station_row = stations_data.iloc[0]
+        print(f"Closest airport station found: {station_row['name']} at {station_row['latitude']}, {station_row['longitude']}")
+        print(f"Station ID: {station_row['wmo']}")
+        station_id = station_row['wmo']
+        hourly_end_date = station_row['hourly_end']
         return station_id, hourly_end_date
-    raise ValueError("No suitable weather station found within the specified range.")
+    raise ValueError("No suitable airport weather station found within the specified range.")
     return None
 
 def get_weather_condition_code(prcp, temp_min, temp_max):
