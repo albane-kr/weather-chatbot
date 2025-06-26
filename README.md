@@ -6,3 +6,4 @@ The frontend and backend for the web-application and multilingual sentiment anal
 
 The backend for the weather prediction model was developed by Henrik Klasen.
 
+The latest version of the branch chatbot_frontend
